@@ -48,7 +48,7 @@ th{background:#f3f4f7;}
 <div class="container">
 <h2>Academic Intervention</h2>
 <label>Assessment</label>
-<input type="text" id="assessmentInput" placeholder="Assessment Name">
+<select id="assessmentSelect"></select>
 <label>Reason</label>
 <textarea id="reasonInput" placeholder="Reason for intervention"></textarea>
 <button onclick="addIntervention()">Add Intervention</button>
@@ -62,14 +62,18 @@ th{background:#f3f4f7;}
 </div>
 
 <script>
-var webAppUrl = "https://script.google.com/macros/s/AKfycbwia3OATFYqUucFWjMxD9pEg1C6M35nHx_lGEm1I-IxnEcHafOty0o79b4PF192WqQfVg/exec"; // gantikan dengan Apps Script URL
+var webAppUrl = "https://script.google.com/macros/s/AKfycbzozz7JSjQSLaSf_gWSEETpMXUQivjTffZgPeqVZKmcSU6SmlsmuYhSGCwn8FPwmlaPEQ/exec"; // gantikan dengan Apps Script URL
+var studentIdGlobal="";
+var studentNameGlobal="";
 
 function loadStudent(){
   var id = document.getElementById("studentID").value;
+  studentIdGlobal=id;
   fetch(webAppUrl+"?action=planner&id="+id)
   .then(res=>res.json())
   .then(data=>{
-    if(data.length==0){alert("Student not found");return;}
+    if(data.length==0){alert("Student not found"); return;}
+    studentNameGlobal=data[2];
     document.getElementById("class").innerText=data[0];
     document.getElementById("name").innerText=data[2];
     var assess=[3,8,13,18];
@@ -84,12 +88,28 @@ function loadStudent(){
       document.getElementById("weightA"+i).innerText=data[weight[i-1]];
       document.getElementById("actualA"+i).innerText=data[actual[i-1]];
     }
-    loadInterventions(id,data[2]);
+    loadAssessmentsDropdown();
+    loadInterventions();
   });
 }
 
-function loadInterventions(studentId,studentName){
-  fetch(webAppUrl+"?action=intervention&studentId="+studentId)
+function loadAssessmentsDropdown(){
+  fetch(webAppUrl+"?action=assessments&id="+studentIdGlobal)
+  .then(res=>res.json())
+  .then(data=>{
+    var select=document.getElementById("assessmentSelect");
+    select.innerHTML="";
+    data.forEach(d=>{
+      var opt=document.createElement("option");
+      opt.value=d;
+      opt.innerText=d;
+      select.appendChild(opt);
+    });
+  });
+}
+
+function loadInterventions(){
+  fetch(webAppUrl+"?action=intervention&studentId="+studentIdGlobal)
   .then(res=>res.json())
   .then(data=>{
     var table=document.getElementById("interventionTable");
@@ -109,20 +129,18 @@ function loadInterventions(studentId,studentName){
 }
 
 function addIntervention(){
-  var id=document.getElementById("studentID").value;
-  var name=document.getElementById("name").innerText;
-  var assessment=document.getElementById("assessmentInput").value;
+  var assessment=document.getElementById("assessmentSelect").value;
   var reason=document.getElementById("reasonInput").value;
   fetch(webAppUrl,{
     method:"POST",
     body:JSON.stringify({
       action:"add",
-      id:id,
-      name:name,
+      id:studentIdGlobal,
+      name:studentNameGlobal,
       assessment:assessment,
       reason:reason
     })
-  }).then(()=>loadStudent());
+  }).then(()=>{loadStudent(); document.getElementById("reasonInput").value="";});
 }
 
 function editIntervention(timestamp){
