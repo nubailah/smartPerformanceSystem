@@ -1,82 +1,113 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>SMARTGrade Planner</title>
+<title>SMARTGrade Planner Pro</title>
 
 <style>
 
 body{
 font-family:Arial;
-background:#eef2f7;
-margin:0;
-padding:0;
+background:#f2f4f8;
+margin:0
 }
 
 .header{
-background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
+background:linear-gradient(90deg,#5f6bdc,#7b5bd6);
 color:white;
-padding:20px;
-text-align:center;
+padding:30px;
+text-align:center
 }
 
 .container{
-max-width:1000px;
-margin:auto;
 background:white;
+max-width:900px;
+margin:auto;
+margin-top:20px;
 padding:20px;
 border-radius:10px;
-margin-top:20px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1)
+}
+
+.tabs{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-top:10px
+}
+
+.tabBtn{
+padding:10px 20px;
+border:none;
+background:#ddd;
+cursor:pointer;
+border-radius:6px
+}
+
+.tabBtn.active{
+background:#5f6bdc;
+color:white
+}
+
+.tabContent{
+display:none
+}
+
+.tabContent.active{
+display:block
 }
 
 table{
 width:100%;
 border-collapse:collapse;
+margin-top:10px
 }
 
 th,td{
 border:1px solid #ddd;
 padding:8px;
-text-align:center;
+text-align:center
 }
 
-th{
-background:#f3f4f7;
-}
-
-.correct{background:#c8e6c9;}
-.wrong{background:#ffcdd2;}
-
-.status{
-padding:5px 10px;
-border-radius:5px;
-color:white;
-}
-
-.pass{background:#4caf50;}
-.fail{background:#f44336;}
-
-.progress{
-width:100%;
-background:#ddd;
-border-radius:6px;
-}
-
-.bar{
-height:18px;
-background:#4caf50;
-color:white;
-text-align:center;
+input{
+width:90%;
+padding:6px
 }
 
 button{
-padding:10px;
-background:#4b5bdc;
-color:white;
+padding:10px 15px;
+margin-top:10px;
 border:none;
-border-radius:5px;
+background:#5f6bdc;
+color:white;
+border-radius:6px;
+cursor:pointer
+}
+
+.progress{
+height:20px;
+background:#ddd;
+border-radius:10px;
+margin-top:10px
+}
+
+.progress-bar{
+height:20px;
+background:#4caf50;
+border-radius:10px;
+text-align:center;
+color:white
+}
+
+@media(max-width:600px){
+
+table{
+font-size:12px
+}
+
 }
 
 </style>
@@ -86,270 +117,230 @@ border-radius:5px;
 <body>
 
 <div class="header">
-<h2>SMARTGrade Planner</h2>
+
+<h1>SMARTGrade Planner Pro</h1>
+<p>Student Target vs Actual Assessment Analyzer</p>
+
 </div>
+
+
+<div class="tabs">
+
+<button class="tabBtn active" onclick="openTab('planner')">
+Student Planner
+</button>
+
+<button class="tabBtn" onclick="openTab('intervention')">
+Academic Intervention Plan
+</button>
+
+</div>
+
+
+<div id="planner" class="tabContent active">
 
 <div class="container">
 
-Student ID
+<h2>Student Planner</h2>
 
-<input id="studentID">
+<input id="studentID" placeholder="Enter Student ID">
 
-<button onclick="loadStudent()">Load</button>
+<br><br>
+
+<button onclick="loadStudent()">Load Student</button>
 
 <p>Name: <span id="name"></span></p>
 <p>Class: <span id="class"></span></p>
 
-<table>
+<table id="plannerTable">
 
 <tr>
-
 <th>Assessment</th>
 <th>Max</th>
+<th>Weight</th>
 <th>Target</th>
+<th>Target %</th>
 <th>Actual</th>
-
-</tr>
-
-<tr>
-
-<td id="assess1"></td>
-<td id="maxA1"></td>
-<td><input id="targetA1"></td>
-<td id="actualA1"></td>
-
-</tr>
-
-<tr>
-
-<td id="assess2"></td>
-<td id="maxA2"></td>
-<td><input id="targetA2"></td>
-<td id="actualA2"></td>
-
-</tr>
-
-<tr>
-
-<td id="assess3"></td>
-<td id="maxA3"></td>
-<td><input id="targetA3"></td>
-<td id="actualA3"></td>
-
-</tr>
-
-<tr>
-
-<td id="assess4"></td>
-<td id="maxA4"></td>
-<td><input id="targetA4"></td>
-<td id="actualA4"></td>
-
+<th>Actual %</th>
 </tr>
 
 </table>
 
-<button onclick="saveTarget()">Save Target</button>
+<p>Total Actual Marks: <span id="totalActual">0</span></p>
 
-<h3>PBPA Status</h3>
+<p>Final %: <span id="finalPercent">0</span></p>
 
-<span id="pbpa" class="status"></span>
-
-<h3>Fail Probability</h3>
+<p>PBPA Status: <span id="pbpa"></span></p>
 
 <div class="progress">
-<div id="failBar" class="bar">0%</div>
+
+<div id="failBar" class="progress-bar">0%</div>
+
 </div>
 
 </div>
+
+</div>
+
+
+<div id="intervention" class="tabContent">
 
 <div class="container">
 
 <h2>Academic Intervention Plan</h2>
 
-<table>
+<p>Date: <span id="today"></span></p>
+
+<table id="interventionTable">
 
 <tr>
-
 <th>Assessment</th>
 <th>Student Reason</th>
 <th>Lecturer Response</th>
-<th>Mentor Response</th>
-<th>Date</th>
-
-</tr>
-
-<tr>
-
-<td>Assessment1</td>
-<td><input id="reason1"></td>
-<td><input id="lecturer1"></td>
-<td><input id="mentor1"></td>
-<td id="date1"></td>
-
-</tr>
-
-<tr>
-
-<td>Assessment2</td>
-<td><input id="reason2"></td>
-<td><input id="lecturer2"></td>
-<td><input id="mentor2"></td>
-<td id="date2"></td>
-
-</tr>
-
-<tr>
-
-<td>Assessment3</td>
-<td><input id="reason3"></td>
-<td><input id="lecturer3"></td>
-<td><input id="mentor3"></td>
-<td id="date3"></td>
-
-</tr>
-
-<tr>
-
-<td>Assessment4</td>
-<td><input id="reason4"></td>
-<td><input id="lecturer4"></td>
-<td><input id="mentor4"></td>
-<td id="date4"></td>
-
+<th>Advisor Response</th>
 </tr>
 
 </table>
 
-<button onclick="saveIntervention()">Save Intervention</button>
+<button onclick="saveIntervention()">
+Save Intervention
+</button>
 
 </div>
 
+</div>
+
+
 <script>
 
-var url="https://script.google.com/macros/s/AKfycbzpgTNLa6dRdz_clwtKYqwuv7VRWs8jjyXaXpsG1TTmIQCRgp6n7GEYNdCCvANAbYCxOg/exec"
+var url="https://script.google.com/macros/s/AKfycbzj33nCYZBtNa78hhZcnQ5-z_VNjNczTg0k6EqwdmREfY_f86aSYucvG407FTYLPl91Sw/exec"
+
+function openTab(tab){
+
+document.querySelectorAll(".tabContent")
+.forEach(el=>el.classList.remove("active"))
+
+document.querySelectorAll(".tabBtn")
+.forEach(el=>el.classList.remove("active"))
+
+document.getElementById(tab).classList.add("active")
+
+event.target.classList.add("active")
+
+}
+
+document.getElementById("today").innerText =
+new Date().toLocaleDateString()
 
 
 function loadStudent(){
 
-let id=document.getElementById("studentID").value
+var id=document.getElementById("studentID").value
 
-fetch(url+"?id="+id)
+fetch(url+"?action=getStudent&id="+id)
 
 .then(r=>r.json())
 
 .then(data=>{
 
-document.getElementById("class").innerText=data[0]
-document.getElementById("name").innerText=data[2]
+name.innerText=data.student.name
+class.innerText=data.student.class
 
-document.getElementById("assess1").innerText=data[3]
-document.getElementById("maxA1").innerText=data[4]
-document.getElementById("actualA1").innerText=data[6]
+var table=document.getElementById("plannerTable")
 
-document.getElementById("assess2").innerText=data[8]
-document.getElementById("maxA2").innerText=data[9]
-document.getElementById("actualA2").innerText=data[11]
+var intTable=document.getElementById("interventionTable")
 
-document.getElementById("assess3").innerText=data[13]
-document.getElementById("maxA3").innerText=data[14]
-document.getElementById("actualA3").innerText=data[16]
+table.innerHTML=
+`<tr>
+<th>Assessment</th>
+<th>Max</th>
+<th>Weight</th>
+<th>Target</th>
+<th>Target %</th>
+<th>Actual</th>
+<th>Actual %</th>
+</tr>`
 
-document.getElementById("assess4").innerText=data[18]
-document.getElementById("maxA4").innerText=data[19]
-document.getElementById("actualA4").innerText=data[21]
+intTable.innerHTML=
+`<tr>
+<th>Assessment</th>
+<th>Student Reason</th>
+<th>Lecturer Response</th>
+<th>Advisor Response</th>
+</tr>`
 
-calcPBPA()
+data.assessments.forEach((a,i)=>{
+
+var actual=data.student.actual[i]||0
+
+table.innerHTML+=`
+<tr>
+<td>${a.name}</td>
+<td>${a.max}</td>
+<td>${a.weight}</td>
+<td><input></td>
+<td>0</td>
+<td>${actual}</td>
+<td>0</td>
+</tr>`
+
+intTable.innerHTML+=`
+<tr>
+<td>${a.name}</td>
+<td><input class="reason"></td>
+<td><input class="lecturer"></td>
+<td><input class="advisor"></td>
+</tr>`
+
+})
 
 })
 
 }
 
 
-function calcPBPA(){
-
-let a1=parseFloat(document.getElementById("actualA1").innerText)||0
-let a2=parseFloat(document.getElementById("actualA2").innerText)||0
-let a3=parseFloat(document.getElementById("actualA3").innerText)||0
-
-let max1=parseFloat(document.getElementById("maxA1").innerText)
-let max2=parseFloat(document.getElementById("maxA2").innerText)
-let max3=parseFloat(document.getElementById("maxA3").innerText)
-
-let totalActual=a1+a2+a3
-let passMark=0.45*(max1+max2+max3)
-
-let pbpa=document.getElementById("pbpa")
-
-if(totalActual>=passMark){
-
-pbpa.innerText="PASS PBPA"
-pbpa.className="status pass"
-
-}else{
-
-pbpa.innerText="FAIL PBPA"
-pbpa.className="status fail"
-
-}
-
-let failProb=Math.max(0,(passMark-totalActual)/passMark*100)
-
-let bar=document.getElementById("failBar")
-
-bar.innerText=failProb.toFixed(1)+"%"
-bar.style.width=failProb+"%"
-
-}
-
-
-function saveTarget(){
-
-let payload={
-
-id:document.getElementById("studentID").value,
-
-targetA1:document.getElementById("targetA1").value,
-targetA2:document.getElementById("targetA2").value,
-targetA3:document.getElementById("targetA3").value,
-targetA4:document.getElementById("targetA4").value
-
-}
-
-fetch(url,{method:"POST",body:JSON.stringify(payload)})
-
-}
-
-
 function saveIntervention(){
 
-let payload={
+var id=document.getElementById("studentID").value
 
-id:document.getElementById("studentID").value,
+var rows=document.querySelectorAll("#interventionTable tr")
 
-reason1:reason1.value,
-lecturer1:lecturer1.value,
-mentor1:mentor1.value,
+var records=[]
 
-reason2:reason2.value,
-lecturer2:lecturer2.value,
-mentor2:mentor2.value,
+rows.forEach((r,i)=>{
 
-reason3:reason3.value,
-lecturer3:lecturer3.value,
-mentor3:mentor3.value,
+if(i==0)return
 
-reason4:reason4.value,
-lecturer4:lecturer4.value,
-mentor4:mentor4.value
+records.push({
 
-}
+assessment:r.cells[0].innerText,
+reason:r.cells[1].querySelector("input").value,
+lecturer:r.cells[2].querySelector("input").value,
+advisor:r.cells[3].querySelector("input").value
 
-fetch(url+"?action=saveIntervention",{method:"POST",body:JSON.stringify(payload)})
+})
+
+})
+
+fetch(url+"?action=saveIntervention",{
+
+method:"POST",
+
+body:JSON.stringify({
+
+id:id,
+records:records
+
+})
+
+})
+
+alert("Saved")
 
 }
 
 </script>
 
 </body>
+
 </html>
