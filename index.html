@@ -14,8 +14,7 @@ button:hover{opacity:0.9;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;}
 th{background:#f3f4f7;}
-tr.empty td{background:#fff3f3;}
-td.editable{background:#fff7e6;cursor:pointer;}
+td.editable{background:#fff7e6;cursor:text;}
 @media(max-width:600px){table,th,td,input,button{font-size:12px;padding:5px;}}
 </style>
 </head>
@@ -64,7 +63,7 @@ td.editable{background:#fff7e6;cursor:pointer;}
 </div>
 
 <script>
-var webAppUrl="https://script.google.com/macros/s/AKfycbxGmP8fzg_d8j6OHcpLsLzHnvH0_DRSKhJWM8kgKUzEXxB7A0rX3jCDlWCtnvu-foWyKg/exec";
+var webAppUrl="https://script.google.com/macros/s/AKfycbwObNSbKRcpSIG6x8DY5ZofwI652E8yPBtoFB5Or1M3OCzIsP9DcBCweYFFeXR_ufD_Cg/exec";
 var studentIdGlobal="", studentNameGlobal="";
 
 function loadStudent(){
@@ -131,30 +130,42 @@ function loadInterventions(){
 function addIntervention(){
   var assessment=document.getElementById("assessmentSelect").value;
   var reason=document.getElementById("reasonInput").value;
-  fetch(webAppUrl,{method:"POST",body:JSON.stringify({
-    action:"add",id:studentIdGlobal,name:studentNameGlobal,assessment:assessment,reason:reason
-  })}).then(()=>{loadInterventions(); document.getElementById("reasonInput").value="";});
+  if(!reason){ alert("Please enter reason"); return; }
+  fetch(webAppUrl,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:"add",id:studentIdGlobal,name:studentNameGlobal,assessment:assessment,reason:reason})
+  }).then(res=>res.json()).then(()=>{loadInterventions(); document.getElementById("reasonInput").value="";});
 }
 
 function editIntervention(timestamp){
   var newReason=prompt("Enter new reason:");
   if(!newReason) return;
-  fetch(webAppUrl,{method:"POST",body:JSON.stringify({action:"edit",timestamp:timestamp,reason:newReason})})
-  .then(()=>loadInterventions());
+  fetch(webAppUrl,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:"edit",timestamp:timestamp,reason:newReason})
+  }).then(res=>res.json()).then(()=>loadInterventions());
 }
 
 function deleteIntervention(timestamp){
   if(!confirm("Delete this intervention?")) return;
-  fetch(webAppUrl,{method:"POST",body:JSON.stringify({action:"delete",timestamp:timestamp})})
-  .then(()=>loadInterventions());
+  fetch(webAppUrl,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:"delete",timestamp:timestamp})
+  }).then(res=>res.json()).then(()=>loadInterventions());
 }
 
 function updateResponse(timestamp,value,type){
   var payload={action:"response",timestamp:timestamp};
   if(type=="lecturer") payload.lecturer=value;
   if(type=="advisor") payload.advisor=value;
-  fetch(webAppUrl,{method:"POST",body:JSON.stringify(payload)})
-  .then(()=>loadInterventions());
+  fetch(webAppUrl,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).then(res=>res.json()).then(()=>loadInterventions());
 }
 </script>
 </body>
