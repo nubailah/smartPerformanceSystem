@@ -22,7 +22,7 @@ td.editable{background:#fff7e6;cursor:text;}
 
 <div class="header">
 <h1>SMART Student Planner</h1>
-<p>Planner & Academic Intervention System</p>
+<p>Planner & Academic Intervention</p>
 </div>
 
 <div class="container">
@@ -63,7 +63,7 @@ td.editable{background:#fff7e6;cursor:text;}
 </div>
 
 <script>
-var webAppUrl="https://script.google.com/macros/s/AKfycbwlm-NmJp3EDyEnofcAHccXiT_eFUmm_M-7Ln57Bcq_kyBUj_2Sq0RDThXRe_-xSeBZaQ/exec";
+var webAppUrl="https://script.google.com/macros/s/AKfycbyCXuHQ6nqzo2PwS6U9iiaKunvEWLc1yZZ10_8GeKvafTnifgRM3MArFYYwZKKaPoQjdQ/exec"; // Ganti dengan URL Web App hasil deploy
 var studentIdGlobal="", studentNameGlobal="";
 
 function loadStudent(){
@@ -169,6 +169,5 @@ function updateResponse(timestamp,value,type){
   }).then(res=>res.json()).then(()=>loadInterventions());
 }
 </script>
-
 </body>
 </html>
