@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>SMARTGrade Planner</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#eef2f7;
+margin:0;
+padding:0;
+}
+
+.header{
+background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
+color:white;
+padding:20px;
+text-align:center;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+margin-top:20px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#f3f4f7;
+}
+
+.correct{background:#c8e6c9;}
+.wrong{background:#ffcdd2;}
+
+.status{
+padding:5px 10px;
+border-radius:5px;
+color:white;
+}
+
+.pass{background:#4caf50;}
+.fail{background:#f44336;}
+
+.progress{
+width:100%;
+background:#ddd;
+border-radius:6px;
+}
+
+.bar{
+height:18px;
+background:#4caf50;
+color:white;
+text-align:center;
+}
+
+button{
+padding:10px;
+background:#4b5bdc;
+color:white;
+border:none;
+border-radius:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+<h2>SMARTGrade Planner</h2>
+</div>
+
+<div class="container">
+
+Student ID
+
+<input id="studentID">
+
+<button onclick="loadStudent()">Load</button>
+
+<p>Name: <span id="name"></span></p>
+<p>Class: <span id="class"></span></p>
+
+<table>
+
+<tr>
+
+<th>Assessment</th>
+<th>Max</th>
+<th>Target</th>
+<th>Actual</th>
+
+</tr>
+
+<tr>
+
+<td id="assess1"></td>
+<td id="maxA1"></td>
+<td><input id="targetA1"></td>
+<td id="actualA1"></td>
+
+</tr>
+
+<tr>
+
+<td id="assess2"></td>
+<td id="maxA2"></td>
+<td><input id="targetA2"></td>
+<td id="actualA2"></td>
+
+</tr>
+
+<tr>
+
+<td id="assess3"></td>
+<td id="maxA3"></td>
+<td><input id="targetA3"></td>
+<td id="actualA3"></td>
+
+</tr>
+
+<tr>
+
+<td id="assess4"></td>
+<td id="maxA4"></td>
+<td><input id="targetA4"></td>
+<td id="actualA4"></td>
+
+</tr>
+
+</table>
+
+<button onclick="saveTarget()">Save Target</button>
+
+<h3>PBPA Status</h3>
+
+<span id="pbpa" class="status"></span>
+
+<h3>Fail Probability</h3>
+
+<div class="progress">
+<div id="failBar" class="bar">0%</div>
+</div>
+
+</div>
+
+<div class="container">
+
+<h2>Academic Intervention Plan</h2>
+
+<table>
+
+<tr>
+
+<th>Assessment</th>
+<th>Student Reason</th>
+<th>Lecturer Response</th>
+<th>Mentor Response</th>
+<th>Date</th>
+
+</tr>
+
+<tr>
+
+<td>Assessment1</td>
+<td><input id="reason1"></td>
+<td><input id="lecturer1"></td>
+<td><input id="mentor1"></td>
+<td id="date1"></td>
+
+</tr>
+
+<tr>
+
+<td>Assessment2</td>
+<td><input id="reason2"></td>
+<td><input id="lecturer2"></td>
+<td><input id="mentor2"></td>
+<td id="date2"></td>
+
+</tr>
+
+<tr>
+
+<td>Assessment3</td>
+<td><input id="reason3"></td>
+<td><input id="lecturer3"></td>
+<td><input id="mentor3"></td>
+<td id="date3"></td>
+
+</tr>
+
+<tr>
+
+<td>Assessment4</td>
+<td><input id="reason4"></td>
+<td><input id="lecturer4"></td>
+<td><input id="mentor4"></td>
+<td id="date4"></td>
+
+</tr>
+
+</table>
+
+<button onclick="saveIntervention()">Save Intervention</button>
+
+</div>
+
+<script>
+
+var url="https://script.google.com/macros/s/AKfycbxrUj03nJ6UMK2dIYloYJtCG6EG8TW_j7bTUOS3VBuD11lh5gB9wPCr5n9Kgo81S9YK/exec"
+
+
+function loadStudent(){
+
+let id=document.getElementById("studentID").value
+
+fetch(url+"?id="+id)
+
+.then(r=>r.json())
+
+.then(data=>{
+
+document.getElementById("class").innerText=data[0]
+document.getElementById("name").innerText=data[2]
+
+document.getElementById("assess1").innerText=data[3]
+document.getElementById("maxA1").innerText=data[4]
+document.getElementById("actualA1").innerText=data[6]
+
+document.getElementById("assess2").innerText=data[8]
+document.getElementById("maxA2").innerText=data[9]
+document.getElementById("actualA2").innerText=data[11]
+
+document.getElementById("assess3").innerText=data[13]
+document.getElementById("maxA3").innerText=data[14]
+document.getElementById("actualA3").innerText=data[16]
+
+document.getElementById("assess4").innerText=data[18]
+document.getElementById("maxA4").innerText=data[19]
+document.getElementById("actualA4").innerText=data[21]
+
+calcPBPA()
+
+})
+
+}
+
+
+function calcPBPA(){
+
+let a1=parseFloat(document.getElementById("actualA1").innerText)||0
+let a2=parseFloat(document.getElementById("actualA2").innerText)||0
+let a3=parseFloat(document.getElementById("actualA3").innerText)||0
+
+let max1=parseFloat(document.getElementById("maxA1").innerText)
+let max2=parseFloat(document.getElementById("maxA2").innerText)
+let max3=parseFloat(document.getElementById("maxA3").innerText)
+
+let totalActual=a1+a2+a3
+let passMark=0.45*(max1+max2+max3)
+
+let pbpa=document.getElementById("pbpa")
+
+if(totalActual>=passMark){
+
+pbpa.innerText="PASS PBPA"
+pbpa.className="status pass"
+
+}else{
+
+pbpa.innerText="FAIL PBPA"
+pbpa.className="status fail"
+
+}
+
+let failProb=Math.max(0,(passMark-totalActual)/passMark*100)
+
+let bar=document.getElementById("failBar")
+
+bar.innerText=failProb.toFixed(1)+"%"
+bar.style.width=failProb+"%"
+
+}
+
+
+function saveTarget(){
+
+let payload={
+
+id:document.getElementById("studentID").value,
+
+targetA1:document.getElementById("targetA1").value,
+targetA2:document.getElementById("targetA2").value,
+targetA3:document.getElementById("targetA3").value,
+targetA4:document.getElementById("targetA4").value
+
+}
+
+fetch(url,{method:"POST",body:JSON.stringify(payload)})
+
+}
+
+
+function saveIntervention(){
+
+let payload={
+
+id:document.getElementById("studentID").value,
+
+reason1:reason1.value,
+lecturer1:lecturer1.value,
+mentor1:mentor1.value,
+
+reason2:reason2.value,
+lecturer2:lecturer2.value,
+mentor2:mentor2.value,
+
+reason3:reason3.value,
+lecturer3:lecturer3.value,
+mentor3:mentor3.value,
+
+reason4:reason4.value,
+lecturer4:lecturer4.value,
+mentor4:mentor4.value
+
+}
+
+fetch(url+"?action=saveIntervention",{method:"POST",body:JSON.stringify(payload)})
+
+}
+
+</script>
+
+</body>
+</html>
