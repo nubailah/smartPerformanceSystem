@@ -46,8 +46,6 @@ button{padding:10px 15px;margin:5px 0;background:#4b5bdc;color:white;border:none
 
 <div class="container section" id="intervention">
 <h2>Academic Intervention</h2>
-<label>Student ID</label><input type="text" id="interStudentID" placeholder="Enter Student ID..." oninput="loadAssessments()">
-<label>Student Name</label><input type="text" id="interStudentName" placeholder="Student Name...">
 <label>Assessment</label><select id="interAssessment"></select>
 <label>Reason</label><textarea id="interReason" rows="3"></textarea>
 <label>Lecturer Response</label><textarea id="interLecturer" rows="2"></textarea>
@@ -58,12 +56,11 @@ button{padding:10px 15px;margin:5px 0;background:#4b5bdc;color:white;border:none
 </div>
 
 <script>
-// CONFIG
-var webAppUrl = "https://script.google.com/macros/s/AKfycbyYgEfC_Ym0T_K467b0cQYCg0KmkS1J7Mh-DrdjBK-niiNmUJT0ffSu21d0GvOsd1HyVg/exec"; // satu URL sahaja
+var webAppUrl = "https://script.google.com/macros/s/AKfycbyOlqUIuLKu-V4aN5yOMIeq6GGmPXBEWaaJV_bILT-89lpWaPmi4zmRkgyKV8GXh76P3A/exec"; // Ganti dengan URL Web App
 
 function showSection(id){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
-// ======= Planner Functions =======
+// ===== Planner Functions =====
 function loadStudent(){
   let id = document.getElementById("studentID").value;
   fetch(webAppUrl+"?action=planner&id="+id).then(r=>r.json()).then(data=>{
@@ -78,7 +75,7 @@ function loadStudent(){
       document.getElementById("actualA"+i).innerText=data[actual[i-1]];
       document.getElementById("targetA"+i).value=data[target[i-1]];
     }
-    calcTarget();
+    loadAssessments(); // Auto load assessment dropdown for intervention
   });
 }
 
@@ -93,7 +90,7 @@ function saveTarget(){
   fetch(webAppUrl,{method:"POST",body:JSON.stringify(payload)});
 }
 
-// ======= Intervention Functions =======
+// ===== Intervention Functions =====
 function loadAssessments(){
   fetch(webAppUrl+"?action=assessments").then(r=>r.json()).then(data=>{
     let sel=document.getElementById("interAssessment"); sel.innerHTML="";
@@ -102,29 +99,49 @@ function loadAssessments(){
 }
 
 function saveIntervention(){
+  let studentID = document.getElementById("studentID").value;
+  let studentName = document.getElementById("name").innerText;
+  if(!studentID){ alert("Please load student from Planner first."); return; }
+
   let payload={
-    id:document.getElementById("interStudentID").value,
-    name:document.getElementById("interStudentName").value,
-    assessment:document.getElementById("interAssessment").value,
-    reason:document.getElementById("interReason").value,
-    lecturerResponse:document.getElementById("interLecturer").value,
-    advisorResponse:document.getElementById("interAdvisor").value
+    id: studentID,
+    name: studentName,
+    assessment: document.getElementById("interAssessment").value,
+    reason: document.getElementById("interReason").value,
+    lecturerResponse: document.getElementById("interLecturer").value,
+    advisorResponse: document.getElementById("interAdvisor").value
   };
-  fetch(webAppUrl+"/exec",{method:"POST",body:JSON.stringify(payload)}).then(()=>{alert("Saved");loadInterventionsList();});
+
+  fetch(webAppUrl,{method:"POST",body:JSON.stringify(payload)})
+    .then(res=>res.json())
+    .then(r=>{
+      if(r.ok){ 
+        alert("Intervention saved"); 
+        loadInterventionsList(studentID); 
+        document.getElementById("interReason").value="";
+        document.getElementById("interLecturer").value="";
+        document.getElementById("interAdvisor").value="";
+      } else {
+        alert("Error: "+r.message);
+      }
+    });
 }
 
 function loadInterventionsList(studentId){
-  studentId = studentId || document.getElementById("interStudentID").value;
-  fetch(webAppUrl+"?action=intervention&studentId="+studentId).then(r=>r.json()).then(data=>{
-    let html="<table style='width:100%;border-collapse:collapse'><tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th></tr>";
-    data.forEach(r=>{html+="<tr><td>"+new Date(r.timestamp).toLocaleString()+"</td><td>"+r.assessment+"</td><td>"+r.reason+"</td><td>"+r.lecturerResponse+"</td><td>"+r.advisorResponse+"</td></tr>";});
-    html+="</table>";
-    document.getElementById("interventionsList").innerHTML = html;
-  });
-}
+  studentId = studentId || document.getElementById("studentID").value;
+  if(!studentId){ document.getElementById("interventionsList").innerHTML=""; return; }
 
-// ======= Target Calculation =======
-function calcTarget(){ /* awak boleh copy fungsi calcTarget() & calcActual() dari code lama */ }
+  fetch(webAppUrl+"?action=intervention&studentId="+studentId)
+    .then(res=>res.json())
+    .then(data=>{
+      let html="<table style='width:100%;border-collapse:collapse'><tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th></tr>";
+      data.forEach(r=>{
+        html+="<tr><td>"+new Date(r.timestamp).toLocaleString()+"</td><td>"+r.assessment+"</td><td>"+r.reason+"</td><td>"+r.lecturerResponse+"</td><td>"+r.advisorResponse+"</td></tr>";
+      });
+      html+="</table>";
+      document.getElementById("interventionsList").innerHTML = html;
+    });
+}
 </script>
 </body>
 </html>
