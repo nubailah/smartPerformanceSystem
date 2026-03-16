@@ -13,46 +13,28 @@ textarea{resize:none;}
 table{width:100%;border-collapse:collapse;margin-top:15px;overflow-x:auto;}
 th, td{border:1px solid #ddd;padding:10px;text-align:center;}
 th{background:#f3f4f7;}
-.correct{background-color:#c8e6c9;}
-.wrong{background-color:#ffcdd2;}
-.totalbox{margin-top:12px;font-weight:bold;font-size:15px;}
-.status{font-weight:bold;padding:5px 10px;border-radius:6px;display:inline-block;}
-.pass{background-color:#4caf50;color:white;}
-.fail{background-color:#f44336;color:white;}
-.progress-container{width:100%;background:#ddd;border-radius:8px;overflow:hidden;margin-top:5px;}
-.progress-bar{height:20px;background:#4caf50;text-align:center;color:white;line-height:20px;}
 button{padding:10px 15px;margin:5px 0;background:#4b5bdc;color:white;border:none;border-radius:6px;cursor:pointer;}
 .navbar{display:flex;justify-content:center;margin-bottom:10px;}
 .navbar button{margin:0 5px;}
 .section{display:none;}
 .section.active{display:block;}
-@media(max-width:600px){table,th,td,input,button,textarea,select{font-size:12px;padding:5px;} .progress-bar{font-size:10px;line-height:16px;}}
 </style>
 </head>
 <body>
-
-<div class="header">
-<h1>SMARTGrade Planner Pro</h1>
-<p>Student Target vs Actual Assessment Analyzer</p>
-</div>
-
+<div class="header"><h1>SMARTGrade Planner Pro</h1><p>Student Target vs Actual Assessment Analyzer</p></div>
 <div class="navbar">
 <button onclick="showSection('planner')">Student Planner</button>
 <button onclick="showSection('intervention')">Academic Intervention</button>
 </div>
 
-<!-- Student Planner -->
 <div class="container section active" id="planner">
 <h2>Student Planner</h2>
 <label>Student ID</label>
 <input type="text" id="studentID" placeholder="Enter Student ID...">
 <button onclick="loadStudent()">Load Student</button>
 <button onclick="saveTarget()">Save Target</button>
-<button onclick="clearAllPlanner()">Clear</button>
 <p><b>Name:</b> <span id="name">-</span></p>
 <p><b>Class:</b> <span id="class">-</span></p>
-
-<div style="overflow-x:auto;">
 <table>
 <tr><th>Assessment</th><th>Max</th><th>Weight</th><th>Target</th><th>Target %</th><th>Actual</th><th>Actual %</th></tr>
 <tr><td id="assess1"></td><td id="maxA1"></td><td id="weightA1"></td><td><input id="targetA1" oninput="calcTarget()"></td><td id="targetPctA1"></td><td id="actualA1"></td><td id="actualPctA1"></td></tr>
@@ -62,62 +44,87 @@ button{padding:10px 15px;margin:5px 0;background:#4b5bdc;color:white;border:none
 </table>
 </div>
 
-<div class="totalbox">Total Target Marks: <span id="totalTarget">0</span></div>
-<div class="totalbox">Target Final %: <span id="targetFinalPct">0</span>%</div>
-<div class="totalbox">Total Actual Marks: <span id="totalActual">0</span></div>
-<div class="totalbox">Final %: <span id="finalPercent">0</span>%</div>
-<div class="totalbox">Predicted Grade: <span id="finalGrade">-</span></div>
-<div class="totalbox">Risk Level: <span id="riskLevel">-</span></div>
-<div class="totalbox">PBPA Status: <span id="pbpaStatus" class="status">-</span></div>
-
-<div class="totalbox">Fail Probability Prediction:</div>
-<div class="progress-container">
-<div class="progress-bar" id="failProb">0%</div>
-</div>
-</div>
-
-<!-- Academic Intervention -->
 <div class="container section" id="intervention">
 <h2>Academic Intervention</h2>
-<label>Student ID</label>
-<input type="text" id="interStudentID" placeholder="Enter Student ID..." oninput="loadAssessments()">
-<label>Student Name</label>
-<input type="text" id="interStudentName" placeholder="Student Name...">
-<label>Assessment</label>
-<select id="interAssessment"></select>
-<label>Reason for not achieving target</label>
-<textarea id="interReason" placeholder="Enter reason..." rows="3"></textarea>
-<label>Lecturer Response</label>
-<textarea id="interLecturer" placeholder="Lecturer response..." rows="2"></textarea>
-<label>Advisor Response</label>
-<textarea id="interAdvisor" placeholder="Advisor response..." rows="2"></textarea>
+<label>Student ID</label><input type="text" id="interStudentID" placeholder="Enter Student ID..." oninput="loadAssessments()">
+<label>Student Name</label><input type="text" id="interStudentName" placeholder="Student Name...">
+<label>Assessment</label><select id="interAssessment"></select>
+<label>Reason</label><textarea id="interReason" rows="3"></textarea>
+<label>Lecturer Response</label><textarea id="interLecturer" rows="2"></textarea>
+<label>Advisor Response</label><textarea id="interAdvisor" rows="2"></textarea>
 <button onclick="saveIntervention()">Save Intervention</button>
 <button onclick="loadInterventionsList()">Load Interventions</button>
-
-<h3>Previous Interventions</h3>
-<div id="interventionsList" style="max-height:300px;overflow:auto;"></div>
+<div id="interventionsList" style="max-height:300px;overflow:auto;margin-top:10px;"></div>
 </div>
 
 <script>
 // CONFIG
-var plannerUrl="https://script.google.com/macros/s/AKfycbwGT9zzQBQApEQHKfQp8Tto7Zec_FcEVwXOxR1vdTHgbfMIWxgDqS3oNsAnsTifr7A63w/exec";
-var interventionUrl="https://script.google.com/macros/s/AKfycbwGT9zzQBQApEQHKfQp8Tto7Zec_FcEVwXOxR1vdTHgbfMIWxgDqS3oNsAnsTifr7A63w/exec";
-var assessmentsUrl="https://script.google.com/macros/s/AKfycbwGT9zzQBQApEQHKfQp8Tto7Zec_FcEVwXOxR1vdTHgbfMIWxgDqS3oNsAnsTifr7A63w/exec";
+var webAppUrl = "https://script.google.com/macros/s/AKfycbyYgEfC_Ym0T_K467b0cQYCg0KmkS1J7Mh-DrdjBK-niiNmUJT0ffSu21d0GvOsd1HyVg/exec"; // satu URL sahaja
 
-// NAVBAR
 function showSection(id){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
-// Functions for Planner & Intervention here ...
-// (Use same JS functions from previous full HTML, plus:)
-function loadAssessments(){
-  fetch(assessmentsUrl)
-    .then(res=>res.json())
-    .then(data=>{
-      let sel = document.getElementById("interAssessment");
-      sel.innerHTML="";
-      data.forEach(a=>{let opt=document.createElement("option");opt.value=a;opt.innerText=a;sel.appendChild(opt);});
-    });
+// ======= Planner Functions =======
+function loadStudent(){
+  let id = document.getElementById("studentID").value;
+  fetch(webAppUrl+"?action=planner&id="+id).then(r=>r.json()).then(data=>{
+    if(data.length==0){alert("ID not found"); return;}
+    document.getElementById("class").innerText = data[0];
+    document.getElementById("name").innerText = data[2];
+    let assess=[3,8,13,18]; let max=[5,10,15,20]; let weight=[6,11,16,21]; let actual=[7,12,17,22]; let target=[4,9,14,19];
+    for(let i=1;i<=4;i++){
+      document.getElementById("assess"+i).innerText=data[assess[i-1]];
+      document.getElementById("maxA"+i).innerText=data[max[i-1]];
+      document.getElementById("weightA"+i).innerText=data[weight[i-1]];
+      document.getElementById("actualA"+i).innerText=data[actual[i-1]];
+      document.getElementById("targetA"+i).value=data[target[i-1]];
+    }
+    calcTarget();
+  });
 }
+
+function saveTarget(){
+  let payload={
+    id:document.getElementById("studentID").value,
+    targetA1:document.getElementById("targetA1").value,
+    targetA2:document.getElementById("targetA2").value,
+    targetA3:document.getElementById("targetA3").value,
+    targetA4:document.getElementById("targetA4").value
+  };
+  fetch(webAppUrl,{method:"POST",body:JSON.stringify(payload)});
+}
+
+// ======= Intervention Functions =======
+function loadAssessments(){
+  fetch(webAppUrl+"?action=assessments").then(r=>r.json()).then(data=>{
+    let sel=document.getElementById("interAssessment"); sel.innerHTML="";
+    data.forEach(a=>{let opt=document.createElement("option"); opt.value=a; opt.innerText=a; sel.appendChild(opt);});
+  });
+}
+
+function saveIntervention(){
+  let payload={
+    id:document.getElementById("interStudentID").value,
+    name:document.getElementById("interStudentName").value,
+    assessment:document.getElementById("interAssessment").value,
+    reason:document.getElementById("interReason").value,
+    lecturerResponse:document.getElementById("interLecturer").value,
+    advisorResponse:document.getElementById("interAdvisor").value
+  };
+  fetch(webAppUrl+"/exec",{method:"POST",body:JSON.stringify(payload)}).then(()=>{alert("Saved");loadInterventionsList();});
+}
+
+function loadInterventionsList(studentId){
+  studentId = studentId || document.getElementById("interStudentID").value;
+  fetch(webAppUrl+"?action=intervention&studentId="+studentId).then(r=>r.json()).then(data=>{
+    let html="<table style='width:100%;border-collapse:collapse'><tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th></tr>";
+    data.forEach(r=>{html+="<tr><td>"+new Date(r.timestamp).toLocaleString()+"</td><td>"+r.assessment+"</td><td>"+r.reason+"</td><td>"+r.lecturerResponse+"</td><td>"+r.advisorResponse+"</td></tr>";});
+    html+="</table>";
+    document.getElementById("interventionsList").innerHTML = html;
+  });
+}
+
+// ======= Target Calculation =======
+function calcTarget(){ /* awak boleh copy fungsi calcTarget() & calcActual() dari code lama */ }
 </script>
 </body>
 </html>
