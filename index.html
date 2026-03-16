@@ -14,6 +14,8 @@ button:hover{opacity:0.9;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;}
 th{background:#f3f4f7;}
+tr.empty td{background:#fff3f3;}
+td.editable{background:#fff7e6;cursor:pointer;}
 @media(max-width:600px){table,th,td,input,button{font-size:12px;padding:5px;}}
 </style>
 </head>
@@ -62,12 +64,11 @@ th{background:#f3f4f7;}
 </div>
 
 <script>
-var webAppUrl = "https://script.google.com/macros/s/AKfycbzozz7JSjQSLaSf_gWSEETpMXUQivjTffZgPeqVZKmcSU6SmlsmuYhSGCwn8FPwmlaPEQ/exec"; // gantikan dengan Apps Script URL
-var studentIdGlobal="";
-var studentNameGlobal="";
+var webAppUrl="https://script.google.com/macros/s/AKfycbxGmP8fzg_d8j6OHcpLsLzHnvH0_DRSKhJWM8kgKUzEXxB7A0rX3jCDlWCtnvu-foWyKg/exec";
+var studentIdGlobal="", studentNameGlobal="";
 
 function loadStudent(){
-  var id = document.getElementById("studentID").value;
+  var id=document.getElementById("studentID").value;
   studentIdGlobal=id;
   fetch(webAppUrl+"?action=planner&id="+id)
   .then(res=>res.json())
@@ -101,8 +102,7 @@ function loadAssessmentsDropdown(){
     select.innerHTML="";
     data.forEach(d=>{
       var opt=document.createElement("option");
-      opt.value=d;
-      opt.innerText=d;
+      opt.value=d; opt.innerText=d;
       select.appendChild(opt);
     });
   });
@@ -119,8 +119,8 @@ function loadInterventions(){
       row.insertCell(0).innerText=d.timestamp;
       row.insertCell(1).innerText=d.assessment;
       row.insertCell(2).innerText=d.reason;
-      row.insertCell(3).innerText=d.lecturer;
-      row.insertCell(4).innerText=d.advisor;
+      row.insertCell(3).innerHTML=`<span class="editable" contenteditable onblur="updateResponse('${d.timestamp}',this.innerText,'lecturer')">${d.lecturer||''}</span>`;
+      row.insertCell(4).innerHTML=`<span class="editable" contenteditable onblur="updateResponse('${d.timestamp}',this.innerText,'advisor')">${d.advisor||''}</span>`;
       var actions=row.insertCell(5);
       actions.innerHTML=`<button onclick='editIntervention("${d.timestamp}")'>Edit</button>
                          <button onclick='deleteIntervention("${d.timestamp}")'>Delete</button>`;
@@ -131,40 +131,30 @@ function loadInterventions(){
 function addIntervention(){
   var assessment=document.getElementById("assessmentSelect").value;
   var reason=document.getElementById("reasonInput").value;
-  fetch(webAppUrl,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"add",
-      id:studentIdGlobal,
-      name:studentNameGlobal,
-      assessment:assessment,
-      reason:reason
-    })
-  }).then(()=>{loadStudent(); document.getElementById("reasonInput").value="";});
+  fetch(webAppUrl,{method:"POST",body:JSON.stringify({
+    action:"add",id:studentIdGlobal,name:studentNameGlobal,assessment:assessment,reason:reason
+  })}).then(()=>{loadInterventions(); document.getElementById("reasonInput").value="";});
 }
 
 function editIntervention(timestamp){
   var newReason=prompt("Enter new reason:");
   if(!newReason) return;
-  fetch(webAppUrl,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"edit",
-      timestamp:timestamp,
-      reason:newReason
-    })
-  }).then(()=>loadStudent());
+  fetch(webAppUrl,{method:"POST",body:JSON.stringify({action:"edit",timestamp:timestamp,reason:newReason})})
+  .then(()=>loadInterventions());
 }
 
 function deleteIntervention(timestamp){
   if(!confirm("Delete this intervention?")) return;
-  fetch(webAppUrl,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"delete",
-      timestamp:timestamp
-    })
-  }).then(()=>loadStudent());
+  fetch(webAppUrl,{method:"POST",body:JSON.stringify({action:"delete",timestamp:timestamp})})
+  .then(()=>loadInterventions());
+}
+
+function updateResponse(timestamp,value,type){
+  var payload={action:"response",timestamp:timestamp};
+  if(type=="lecturer") payload.lecturer=value;
+  if(type=="advisor") payload.advisor=value;
+  fetch(webAppUrl,{method:"POST",body:JSON.stringify(payload)})
+  .then(()=>loadInterventions());
 }
 </script>
 </body>
