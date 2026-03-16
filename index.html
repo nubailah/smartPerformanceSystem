@@ -63,11 +63,12 @@ td.editable{background:#fff7e6;cursor:text;}
 </div>
 
 <script>
-var webAppUrl="https://script.google.com/macros/s/AKfycbwObNSbKRcpSIG6x8DY5ZofwI652E8yPBtoFB5Or1M3OCzIsP9DcBCweYFFeXR_ufD_Cg/exec";
+var webAppUrl="https://script.google.com/macros/s/AKfycbwlm-NmJp3EDyEnofcAHccXiT_eFUmm_M-7Ln57Bcq_kyBUj_2Sq0RDThXRe_-xSeBZaQ/exec";
 var studentIdGlobal="", studentNameGlobal="";
 
 function loadStudent(){
   var id=document.getElementById("studentID").value;
+  if(!id){alert("Enter Student ID"); return;}
   studentIdGlobal=id;
   fetch(webAppUrl+"?action=planner&id="+id)
   .then(res=>res.json())
@@ -168,5 +169,6 @@ function updateResponse(timestamp,value,type){
   }).then(res=>res.json()).then(()=>loadInterventions());
 }
 </script>
+
 </body>
 </html>
