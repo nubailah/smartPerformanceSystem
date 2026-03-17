@@ -2,62 +2,27 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
+<title>SMARTGrade Pro</title>
 <style>
-body{font-family:'Segoe UI';background:#eef2f7;margin:0;}
-
-.header{
-background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
-color:white;text-align:center;padding:20px;
-}
-
+body{font-family:'Segoe UI',sans-serif;margin:0;background:#eef2f7;}
+.header{background:linear-gradient(135deg,#5f6bdc,#8b5bbf);color:white;text-align:center;padding:20px;}
 .nav{display:flex;}
-.nav button{
-flex:1;padding:12px;border:none;background:#ddd;
-}
+.nav button{flex:1;padding:12px;border:none;background:#ddd;cursor:pointer;}
 .nav button.active{background:#5f6bdc;color:white;}
-
 .container{padding:15px;}
-
-.card{
-background:white;padding:15px;border-radius:10px;margin-top:10px;
-}
-
-input,select{
-width:100%;padding:10px;margin:5px 0;
-}
-
-button{
-padding:10px;background:#5f6bdc;color:white;border:none;margin-top:5px;
-}
-
-table{
-width:100%;border-collapse:collapse;margin-top:10px;
-}
-
-th,td{
-border:1px solid #ddd;padding:6px;text-align:center;
-}
-
-textarea{
-width:100%;
-min-height:60px;
-resize:vertical;
-}
-
-.progress{
-height:20px;background:#ddd;border-radius:10px;overflow:hidden;
-}
-.bar{
-height:20px;background:#4caf50;color:white;text-align:center;
-}
-
-@media(max-width:600px){
-table{font-size:12px;}
-}
+.card{background:white;padding:15px;border-radius:10px;margin-top:10px;}
+input,select,textarea{width:100%;padding:10px;margin:5px 0;}
+textarea{min-height:60px;resize:vertical;}
+button{padding:10px;background:#5f6bdc;color:white;border:none;margin-top:5px;cursor:pointer;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #ddd;padding:6px;text-align:center;vertical-align:top;}
+.progress-container{margin:5px 0;}
+.progress{height:20px;background:#ddd;border-radius:10px;overflow:hidden;}
+.bar{height:20px;background:#4caf50;color:white;text-align:center;}
+@media(max-width:600px){table,input,select,textarea{font-size:12px;padding:5px;}}
+textarea.response{height:50px;width:90%;resize:vertical;}
 </style>
 </head>
-
 <body>
 
 <div class="header"><h2>SMARTGrade Pro</h2></div>
@@ -71,181 +36,185 @@ table{font-size:12px;}
 
 <!-- PLANNER -->
 <div id="plannerTab" class="card">
+<input id="studentID" placeholder="Enter Student ID">
+<button onclick="loadStudent()">Load Student</button>
+<button onclick="saveTarget()">Save Target</button>
 
-<input id="studentID" placeholder="Student ID">
+<p><b>Name:</b> <span id="name">-</span></p>
+<p><b>Class:</b> <span id="class">-</span></p>
 
-<button onclick="loadStudent()">Load</button>
-
-<p>Name: <span id="name">-</span></p>
-
+<div style="overflow-x:auto;">
 <table>
-<tr><th>Assess</th><th>Max</th><th>Target</th><th>Actual</th><th>%</th></tr>
-
-<tr><td id="assess1"></td><td id="maxA1"></td><td><input id="targetA1" oninput="calc()"></td><td id="actualA1"></td><td id="pct1"></td></tr>
-<tr><td id="assess2"></td><td id="maxA2"></td><td><input id="targetA2" oninput="calc()"></td><td id="actualA2"></td><td id="pct2"></td></tr>
-<tr><td id="assess3"></td><td id="maxA3"></td><td><input id="targetA3" oninput="calc()"></td><td id="actualA3"></td><td id="pct3"></td></tr>
-<tr><td id="assess4"></td><td id="maxA4"></td><td><input id="targetA4" oninput="calc()"></td><td id="actualA4"></td><td id="pct4"></td></tr>
+<tr>
+<th>Assess</th><th>Max</th><th>Weight</th><th>Target</th><th>Target %</th><th>Actual</th><th>Actual %</th>
+</tr>
+<tr><td id="assess1"></td><td id="maxA1"></td><td id="weightA1"></td><td><input id="targetA1" oninput="calcTarget()"></td><td id="targetPctA1"></td><td id="actualA1"></td><td id="actualPctA1"></td></tr>
+<tr><td id="assess2"></td><td id="maxA2"></td><td id="weightA2"></td><td><input id="targetA2" oninput="calcTarget()"></td><td id="targetPctA2"></td><td id="actualA2"></td><td id="actualPctA2"></td></tr>
+<tr><td id="assess3"></td><td id="maxA3"></td><td id="weightA3"></td><td><input id="targetA3" oninput="calcTarget()"></td><td id="targetPctA3"></td><td id="actualA3"></td><td id="actualPctA3"></td></tr>
+<tr><td id="assess4"></td><td id="maxA4"></td><td id="weightA4"></td><td><input id="targetA4" oninput="calcTarget()"></td><td id="targetPctA4"></td><td id="actualA4"></td><td id="actualPctA4"></td></tr>
 </table>
+</div>
 
-<p>Total %: <span id="total">0</span></p>
-<p>Grade: <span id="grade">-</span></p>
-<p>Risk: <span id="risk">-</span></p>
-
-<div class="progress"><div id="bar" class="bar">0%</div></div>
-
+<div class="progress-container">Total Target: <span id="totalTarget">0</span></div>
+<div class="progress-container">Target Final %: <span id="targetFinalPct">0</span>%</div>
+<div class="progress-container">Total Actual: <span id="totalActual">0</span></div>
+<div class="progress-container">Final %: <span id="finalPercent">0</span>%</div>
+<div class="progress-container">Predicted Grade: <span id="finalGrade">-</span></div>
+<div class="progress-container">Risk Level: <span id="riskLevel">-</span></div>
+<div class="progress-container">PBPA Status: <span id="pbpaStatus">-</span></div>
+<div class="progress-container"><div id="failProb" class="bar">0%</div></div>
 </div>
 
 <!-- INTERVENTION -->
-<div id="interventionTab" class="card" style="display:none">
-
+<div id="interventionTab" class="card" style="display:none;">
 <select id="assessment"></select>
-
-<textarea id="reason" placeholder="Reason"></textarea>
-
-<button onclick="saveIntervention()">Submit</button>
+<textarea id="reason" placeholder="Reason for intervention"></textarea>
+<button onclick="saveIntervention()">Submit Intervention</button>
 
 <h3>History</h3>
 <table id="table"></table>
-
 </div>
 
 </div>
 
 <script>
+var url="https://script.google.com/macros/s/AKfycbz3O6IXb4aV_mOQl5tXpW0yPsf26yX4rDcTuLRQxHYLIHBeW6X5_pReqoq5JRLBZgYr_A/exec";
 
-var url="https://script.google.com/macros/s/AKfycbz28WGaCWjhW4defkXzYevq8oEOOwKOgsIh_cumnl3bm1IiGT2Mybt7emMURd_QP5q7WQ/exec";
-
-// TAB
+// Tab switch
 function showTab(tab){
 plannerTab.style.display=(tab=="planner")?"block":"none";
 interventionTab.style.display=(tab=="intervention")?"block":"none";
+document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+document.querySelector('.nav button[onclick*="'+tab+'"]').classList.add('active');
 }
 
-// LOAD ASSESSMENT LIST
-function loadAssessments(){
-fetch(url+"?action=getAssessments")
-.then(res=>res.json())
-.then(data=>{
-assessment.innerHTML="";
-data.forEach(a=>{
-let opt=document.createElement("option");
-opt.text=a;
-assessment.add(opt);
-});
-});
+// --- Planner ---
+function getGrade(p){
+if(p>=90)return"A+";
+if(p>=80)return"A";
+if(p>=75)return"A-";
+if(p>=70)return"B+";
+if(p>=65)return"B";
+if(p>=60)return"B-";
+if(p>=55)return"C+";
+if(p>=50)return"C";
+if(p>=45)return"C-";
+return"F";
 }
 
-// LOAD STUDENT
-function loadStudent(){
-fetch(url+"?id="+studentID.value)
-.then(res=>res.json())
-.then(data=>{
-if(data.length==0){alert("No data");return;}
+function detectRisk(p){
+let r=document.getElementById("riskLevel");
+if(p>=70) r.innerText="SAFE";
+else if(p>=50) r.innerText="MODERATE RISK";
+else r.innerText="HIGH RISK";
+}
 
-name.innerText=data[2];
-
-let assess=[3,8,13,18];
-let max=[5,10,15,20];
-let actual=[7,12,17,22];
-
+function calcTarget(){
+let totalTarget=0,totalTargetMax=0;
 for(let i=1;i<=4;i++){
-document.getElementById("assess"+i).innerText=data[assess[i-1]];
-document.getElementById("maxA"+i).innerText=data[max[i-1]];
-document.getElementById("actualA"+i).innerText=data[actual[i-1]];
+let t=parseFloat(document.getElementById("targetA"+i).value)||0;
+let m=parseFloat(document.getElementById("maxA"+i).innerText)||0;
+let w=parseFloat(document.getElementById("weightA"+i).innerText)||0;
+let pct=(t/m)*w;
+document.getElementById("targetPctA"+i).innerText=pct.toFixed(2);
+totalTarget+=t;
+if(t>0) totalTargetMax+=m;
+}
+document.getElementById("totalTarget").innerText=totalTarget.toFixed(2);
+let targetFinal=(totalTargetMax>0)?(totalTarget/totalTargetMax*100):0;
+document.getElementById("targetFinalPct").innerText=targetFinal.toFixed(2);
+calcActual();
 }
 
-calc();
-loadTable();
-});
-}
-
-// CALCULATION
-function calc(){
-let total=0;
-
+function calcActual(){
+let totalActual=0,totalActualMax=0;
 for(let i=1;i<=4;i++){
 let a=parseFloat(document.getElementById("actualA"+i).innerText)||0;
+let t=parseFloat(document.getElementById("targetA"+i).value)||0;
 let m=parseFloat(document.getElementById("maxA"+i).innerText)||0;
+let w=parseFloat(document.getElementById("weightA"+i).innerText)||0;
+let pct=(a/m)*w;
+document.getElementById("actualPctA"+i).innerText=pct.toFixed(2);
+if(a>=t) document.getElementById("actualA"+i).parentNode.className="correct";
+else document.getElementById("actualA"+i).parentNode.className="wrong";
+totalActual+=a;
+if(a>0) totalActualMax+=m;
+}
+document.getElementById("totalActual").innerText=totalActual.toFixed(2);
+let finalPercent=(totalActualMax>0)?(totalActual/totalActualMax*100):0;
+document.getElementById("finalPercent").innerText=finalPercent.toFixed(2);
+document.getElementById("finalGrade").innerText=getGrade(finalPercent);
+detectRisk(finalPercent);
 
-let pct=(a/m)*100;
-document.getElementById("pct"+i).innerText=pct.toFixed(1);
-
-total+=pct;
+let allMax=0;for(let i=1;i<=3;i++) allMax+=parseFloat(document.getElementById("maxA"+i).innerText)||0;
+let passMark=0.45*allMax;
+let pbpa=document.getElementById("pbpaStatus");
+if(totalActual>=passMark){pbpa.innerText="PASS PBPA";pbpa.className="status pass";}
+else{pbpa.innerText="FAIL PBPA";pbpa.className="status fail";}
+let failProb=Math.max(0,(passMark-totalActual)/passMark*100);
+let bar=document.getElementById("failProb");bar.innerText=failProb.toFixed(2)+"%";
+bar.style.width=Math.min(failProb,100)+"%";
+bar.style.background=(failProb>50)?"#f44336":((failProb>20)?"#ff9800":"#4caf50");
 }
 
-total/=4;
-document.getElementById("total").innerText=total.toFixed(1);
-
-let g= total>=80?"A": total>=60?"B":"F";
-grade.innerText=g;
-
-risk.innerText= total>=70?"SAFE": total>=50?"MODERATE":"HIGH";
-
-bar.style.width=total+"%";
-bar.innerText=total.toFixed(1)+"%";
+// --- Load student ---
+function loadStudent(){
+fetch(url+"?id="+studentID.value).then(res=>res.json()).then(data=>{
+if(data.length==0){alert("ID not found");return;}
+document.getElementById("name").innerText=data[2];
+document.getElementById("class").innerText=data[0];
+let aI=[3,8,13,18],mI=[5,10,15,20],wI=[6,11,16,21],actI=[7,12,17,22],tI=[4,9,14,19];
+for(let i=1;i<=4;i++){
+document.getElementById("assess"+i).innerText=data[aI[i-1]];
+document.getElementById("maxA"+i).innerText=data[mI[i-1]];
+document.getElementById("weightA"+i).innerText=data[wI[i-1]];
+document.getElementById("actualA"+i).innerText=data[actI[i-1]];
+document.getElementById("targetA"+i).value=data[tI[i-1]];
 }
-
-// SAVE INTERVENTION
-function saveIntervention(){
-if(!studentID.value){alert("Load student first");return;}
-
-fetch(url+"?action=saveIntervention"
-+"&id="+studentID.value
-+"&assessment="+assessment.value
-+"&reason="+encodeURIComponent(reason.value)
-).then(loadTable);
-}
-
-// LOAD TABLE FILTER BY ID
-function loadTable(){
-fetch(url+"?action=getIntervention")
-.then(res=>res.json())
-.then(data=>{
-let html=`<tr>
-<th>Date</th><th>Assessment</th><th>Reason</th>
-<th>Lecturer</th><th>Advisor</th><th>Action</th></tr>`;
-
-for(let i=1;i<data.length;i++){
-if(data[i][1]!=studentID.value) continue;
-
-let row=i+1;
-
-html+=`<tr>
-<td>${new Date(data[i][0]).toLocaleString()}</td>
-<td>${data[i][2]}</td>
-<td>${data[i][3]}</td>
-
-<td>
-<textarea onblur="update(${row},this.value,'lecturer')">${data[i][4]}</textarea>
-</td>
-
-<td>
-<textarea onblur="update(${row},this.value,'advisor')">${data[i][5]}</textarea>
-</td>
-
-<td><button onclick="del(${row})">X</button></td>
-</tr>`;
-}
-
-table.innerHTML=html;
+// intervention dropdown
+fetch(url+"?action=getAssessments&id="+studentID.value).then(r=>r.json()).then(list=>{
+assessment.innerHTML="";list.forEach(a=>{let opt=document.createElement("option");opt.text=a;assessment.add(opt);});
 });
+calcTarget();loadTable();
+});
+
+// --- Save target ---
+function saveTarget(){
+let payload=`id=${studentID.value}&action=saveTarget&t1=${targetA1.value}&t2=${targetA2.value}&t3=${targetA3.value}&t4=${targetA4.value}`;
+fetch(url+"?"+payload).then(()=>alert("Saved"));
 }
 
-// UPDATE
-function update(row,val,type){
-fetch(url+"?action=update&row="+row+"&type="+type+"&value="+encodeURIComponent(val));
+// --- Intervention ---
+function saveIntervention(){
+let payload=`id=${studentID.value}&action=saveIntervention&assessment=${assessment.value}&reason=${reason.value}`;
+fetch(url+"?"+encodeURI(payload)).then(()=>{reason.value="";loadTable();});
 }
 
-// DELETE
+function loadTable(){
+fetch(url+"?action=getIntervention").then(r=>r.json()).then(data=>{
+let html="<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer Response</th><th>Advisor Response</th><th>Action</th></tr>";
+data.forEach((row,i)=>{
+if(row[1]==studentID.value){
+html+="<tr>";
+html+=`<td>${new Date(row[0]).toLocaleString()}</td>`;
+html+=`<td>${row[2]}</td>`;
+html+=`<td>${row[3]}</td>`;
+html+=`<td><textarea class='response' onchange='updateResponse(${i+1},"lecturer",this.value)'>${row[4]||""}</textarea></td>`;
+html+=`<td><textarea class='response' onchange='updateResponse(${i+1},"advisor",this.value)'>${row[5]||""}</textarea></td>`;
+html+=`<td><button onclick='del(${i+1})'>Delete</button></td>`;
+html+="</tr>";
+}
+});
+table.innerHTML=html;
+}
+
+function updateResponse(row,type,value){
+fetch(url+`?action=update&row=${row}&type=${type}&value=${encodeURIComponent(value)}`);
+}
+
 function del(row){
-fetch(url+"?action=delete&row="+row).then(loadTable);
+if(confirm("Delete this intervention?")) fetch(url+`?action=delete&row=${row}`).then(()=>loadTable());
 }
-
-window.onload=function(){
-loadAssessments();
-loadTable();
-}
-
 </script>
 
 </body>
