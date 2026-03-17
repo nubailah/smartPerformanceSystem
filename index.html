@@ -28,15 +28,15 @@ textarea{resize:vertical;}
 </div>
 
 <div style="text-align:center">
-<button onclick="showPlanner()">Planner</button>
-<button onclick="showIntervention()">Academic Intervention</button>
+<button id="plannerBtn">Planner</button>
+<button id="interventionBtn">Academic Intervention</button>
 </div>
 
 <!-- Planner Tab -->
 <div class="container" id="planner">
 <label>Student ID</label>
 <input id="studentID" placeholder="Enter Student ID">
-<button onclick="loadStudent()">Load Student</button>
+<button id="loadStudentBtn">Load Student</button>
 
 <p>Name: <span id="name">-</span></p>
 
@@ -66,7 +66,7 @@ textarea{resize:vertical;}
 <select id="assessment"></select>
 <label>Reason</label>
 <textarea id="reason" style="height:80px;"></textarea>
-<button onclick="saveIntervention()">Save</button>
+<button id="saveInterventionBtn">Save</button>
 
 <h3>Intervention History</h3>
 <table id="interventionTable">
@@ -75,20 +75,35 @@ textarea{resize:vertical;}
 </div>
 
 <script>
-var url="https://script.google.com/macros/s/AKfycbwB1BHlM1xQmRqo_MKsWCtq02qdtUY48mNcGn-L4AZJlGg4vfL3LMccCJ8MLysKr7vmow/exec";
+var url="https://script.google.com/macros/s/AKfycbx_7zyYCUFtX-JSTmf6olBRtG6X01vtBpIxX7fYUqrByLLXtbuugTNaZxR8ugN5Q--aWw/exec";
 
-// Show tabs
-function showPlanner(){document.getElementById("planner").style.display="block";document.getElementById("interventionPage").style.display="none";}
-function showIntervention(){document.getElementById("planner").style.display="none";document.getElementById("interventionPage").style.display="block";loadAssessment();loadIntervention();}
+// ===== Tab Switching =====
+document.getElementById("plannerBtn").addEventListener("click", showPlanner);
+document.getElementById("interventionBtn").addEventListener("click", showIntervention);
+document.getElementById("loadStudentBtn").addEventListener("click", loadStudent);
+document.getElementById("saveInterventionBtn").addEventListener("click", saveIntervention);
 
-// Planner functions
+function showPlanner(){
+  document.getElementById("planner").style.display="block";
+  document.getElementById("interventionPage").style.display="none";
+}
+function showIntervention(){
+  document.getElementById("planner").style.display="none";
+  document.getElementById("interventionPage").style.display="block";
+  loadAssessment();
+  loadIntervention();
+}
+
+// ===== Planner Functions =====
 function getGrade(p){if(p>=90)return"A+";if(p>=80)return"A";if(p>=75)return"A-";if(p>=70)return"B+";if(p>=65)return"B";if(p>=60)return"B-";if(p>=55)return"C+";if(p>=50)return"C";if(p>=45)return"C-";return"F";}
 function detectRisk(p){if(p>=70)document.getElementById("riskLevel").innerText="SAFE";else if(p>=50)document.getElementById("riskLevel").innerText="MODERATE RISK";else document.getElementById("riskLevel").innerText="HIGH RISK";}
 function calcTarget(){let totalTarget=0,totalTargetMax=0;for(let i=1;i<=4;i++){let target=parseFloat(document.getElementById("targetA"+i).value)||0;let max=parseFloat(document.getElementById("maxA"+i).innerText)||0;let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;let pct=(target/max)*weight;document.getElementById("targetPctA"+i).innerText=pct.toFixed(2);totalTarget+=target;if(target>0)totalTargetMax+=max;}document.getElementById("totalTarget").innerText=totalTarget.toFixed(2);let targetFinal=(totalTargetMax>0)?(totalTarget/totalTargetMax*100):0;document.getElementById("targetFinalPct").innerText=targetFinal.toFixed(2);calcActual();}
 function calcActual(){let totalActual=0,totalActualMax=0;for(let i=1;i<=4;i++){let actual=parseFloat(document.getElementById("actualA"+i).innerText)||0;let target=parseFloat(document.getElementById("targetA"+i).value)||0;let max=parseFloat(document.getElementById("maxA"+i).innerText)||0;let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;let pct=(actual/max)*weight;document.getElementById("actualPctA"+i).innerText=pct.toFixed(2);if(actual>=target)document.getElementById("actualA"+i).parentNode.className="correct";else document.getElementById("actualA"+i).parentNode.className="wrong";totalActual+=actual;if(actual>0)totalActualMax+=max;}document.getElementById("totalActual").innerText=totalActual;let finalPercent=(totalActualMax>0)?(totalActual/totalActualMax*100):0;document.getElementById("finalPercent").innerText=finalPercent.toFixed(2);document.getElementById("finalGrade").innerText=getGrade(finalPercent);detectRisk(finalPercent);let allMax=0;for(let i=1;i<=3;i++)allMax+=parseFloat(document.getElementById("maxA"+i).innerText)||0;let passMark=0.45*allMax;let pbpa=document.getElementById("pbpaStatus");if(totalActual>=passMark){pbpa.innerText="PASS PBPA";pbpa.className="status pass";}else{pbpa.innerText="FAIL PBPA";pbpa.className="status fail";}}
+
+// ===== Load Student =====
 function loadStudent(){let id=document.getElementById("studentID").value;fetch(url+"?action=getStudent&id="+id).then(res=>res.json()).then(data=>{if(data.length==0){alert("ID not found");return;}document.getElementById("name").innerText=data[2];let assess=[3,8,13,18];let max=[5,10,15,20];let weight=[6,11,16,21];let actual=[7,12,17,22];let target=[4,9,14,19];for(let i=1;i<=4;i++){document.getElementById("assess"+i).innerText=data[assess[i-1]];document.getElementById("maxA"+i).innerText=data[max[i-1]];document.getElementById("weightA"+i).innerText=data[weight[i-1]];document.getElementById("actualA"+i).innerText=data[actual[i-1]];document.getElementById("targetA"+i).value=data[target[i-1]]||0;}calcTarget();}
 
-// Intervention functions
+// ===== Intervention Functions =====
 function loadAssessment(){let id=document.getElementById("studentID").value;fetch(url+"?action=getAssessment&id="+id).then(res=>res.json()).then(data=>{let sel=document.getElementById("assessment");sel.innerHTML="";data.forEach(a=>{let o=document.createElement("option");o.text=a;o.value=a;sel.add(o);});});}
 
 function saveIntervention(){let payload={action:"saveIntervention",id:document.getElementById("studentID").value,name:document.getElementById("name").innerText,assessment:document.getElementById("assessment").value,reason:document.getElementById("reason").value};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);if(r.ok){document.getElementById("reason").value="";loadIntervention();}});}
@@ -107,5 +122,6 @@ function updateIntervention(timestamp){let payload={action:"updateIntervention",
 function deleteIntervention(timestamp){if(!confirm("Confirm delete?"))return;let payload={action:"deleteIntervention",timestamp:timestamp};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
 
 </script>
+
 </body>
 </html>
