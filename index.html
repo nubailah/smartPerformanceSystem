@@ -2,88 +2,65 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTGrade Pro</title>
 
 <style>
-body{
-  font-family:'Segoe UI';
-  margin:0;
-  background:#eef2f7;
-}
+body{font-family:'Segoe UI';background:#eef2f7;margin:0;}
 
 .header{
-  background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
-  color:white;
-  text-align:center;
-  padding:20px;
+background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
+color:white;text-align:center;padding:20px;
 }
 
-.nav{
-  display:flex;
-  background:white;
-}
-
+.nav{display:flex;}
 .nav button{
-  flex:1;
-  padding:12px;
-  border:none;
-  cursor:pointer;
-  background:#ddd;
+flex:1;padding:12px;border:none;background:#ddd;
 }
+.nav button.active{background:#5f6bdc;color:white;}
 
-.nav button.active{
-  background:#5f6bdc;
-  color:white;
-}
-
-.container{
-  padding:15px;
-}
+.container{padding:15px;}
 
 .card{
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  margin-top:10px;
+background:white;padding:15px;border-radius:10px;margin-top:10px;
 }
 
-input, select{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
+input,select{
+width:100%;padding:10px;margin:5px 0;
 }
 
 button{
-  padding:10px;
-  margin-top:5px;
-  background:#5f6bdc;
-  color:white;
-  border:none;
+padding:10px;background:#5f6bdc;color:white;border:none;margin-top:5px;
 }
 
 table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
+width:100%;border-collapse:collapse;margin-top:10px;
 }
 
 th,td{
-  border:1px solid #ddd;
-  padding:6px;
-  text-align:center;
+border:1px solid #ddd;padding:6px;text-align:center;
+}
+
+textarea{
+width:100%;
+min-height:60px;
+resize:vertical;
+}
+
+.progress{
+height:20px;background:#ddd;border-radius:10px;overflow:hidden;
+}
+.bar{
+height:20px;background:#4caf50;color:white;text-align:center;
 }
 
 @media(max-width:600px){
-  table{font-size:12px;}
+table{font-size:12px;}
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<h2>SMARTGrade Pro</h2>
-</div>
+<div class="header"><h2>SMARTGrade Pro</h2></div>
 
 <div class="nav">
 <button class="active" onclick="showTab('planner')">Planner</button>
@@ -98,55 +75,32 @@ th,td{
 <input id="studentID" placeholder="Student ID">
 
 <button onclick="loadStudent()">Load</button>
-<button onclick="saveTarget()">Save Target</button>
 
 <p>Name: <span id="name">-</span></p>
 
 <table>
-<tr><th>Assess</th><th>Max</th><th>Target</th><th>Actual</th></tr>
+<tr><th>Assess</th><th>Max</th><th>Target</th><th>Actual</th><th>%</th></tr>
 
-<tr>
-<td id="assess1"></td>
-<td id="maxA1"></td>
-<td><input id="targetA1"></td>
-<td id="actualA1"></td>
-</tr>
-
-<tr>
-<td id="assess2"></td>
-<td id="maxA2"></td>
-<td><input id="targetA2"></td>
-<td id="actualA2"></td>
-</tr>
-
-<tr>
-<td id="assess3"></td>
-<td id="maxA3"></td>
-<td><input id="targetA3"></td>
-<td id="actualA3"></td>
-</tr>
-
-<tr>
-<td id="assess4"></td>
-<td id="maxA4"></td>
-<td><input id="targetA4"></td>
-<td id="actualA4"></td>
-</tr>
+<tr><td id="assess1"></td><td id="maxA1"></td><td><input id="targetA1" oninput="calc()"></td><td id="actualA1"></td><td id="pct1"></td></tr>
+<tr><td id="assess2"></td><td id="maxA2"></td><td><input id="targetA2" oninput="calc()"></td><td id="actualA2"></td><td id="pct2"></td></tr>
+<tr><td id="assess3"></td><td id="maxA3"></td><td><input id="targetA3" oninput="calc()"></td><td id="actualA3"></td><td id="pct3"></td></tr>
+<tr><td id="assess4"></td><td id="maxA4"></td><td><input id="targetA4" oninput="calc()"></td><td id="actualA4"></td><td id="pct4"></td></tr>
 </table>
+
+<p>Total %: <span id="total">0</span></p>
+<p>Grade: <span id="grade">-</span></p>
+<p>Risk: <span id="risk">-</span></p>
+
+<div class="progress"><div id="bar" class="bar">0%</div></div>
 
 </div>
 
 <!-- INTERVENTION -->
 <div id="interventionTab" class="card" style="display:none">
 
-<select id="assessment">
-<option>A1</option>
-<option>A2</option>
-<option>A3</option>
-<option>A4</option>
-</select>
+<select id="assessment"></select>
 
-<input id="reason" placeholder="Reason">
+<textarea id="reason" placeholder="Reason"></textarea>
 
 <button onclick="saveIntervention()">Submit</button>
 
@@ -159,100 +113,138 @@ th,td{
 
 <script>
 
-var url="https://script.google.com/macros/s/AKfycbx9Be_r8JgBYIE1DEJfWKH-deNKHwQx1mlXinfB8jNxTk_-UWwC2M8QH05F0W7v4Qtsdg/exec";
+var url="https://script.google.com/macros/s/AKfycbz28WGaCWjhW4defkXzYevq8oEOOwKOgsIh_cumnl3bm1IiGT2Mybt7emMURd_QP5q7WQ/exec";
 
 // TAB
 function showTab(tab){
-  plannerTab.style.display=(tab=="planner")?"block":"none";
-  interventionTab.style.display=(tab=="intervention")?"block":"none";
+plannerTab.style.display=(tab=="planner")?"block":"none";
+interventionTab.style.display=(tab=="intervention")?"block":"none";
+}
+
+// LOAD ASSESSMENT LIST
+function loadAssessments(){
+fetch(url+"?action=getAssessments")
+.then(res=>res.json())
+.then(data=>{
+assessment.innerHTML="";
+data.forEach(a=>{
+let opt=document.createElement("option");
+opt.text=a;
+assessment.add(opt);
+});
+});
 }
 
 // LOAD STUDENT
 function loadStudent(){
-  fetch(url+"?id="+studentID.value)
-  .then(res=>res.json())
-  .then(data=>{
-    if(data.length==0){alert("No data"); return;}
+fetch(url+"?id="+studentID.value)
+.then(res=>res.json())
+.then(data=>{
+if(data.length==0){alert("No data");return;}
 
-    name.innerText=data[2];
+name.innerText=data[2];
 
-    let assess=[3,8,13,18];
-    let max=[5,10,15,20];
-    let actual=[7,12,17,22];
-    let target=[4,9,14,19];
+let assess=[3,8,13,18];
+let max=[5,10,15,20];
+let actual=[7,12,17,22];
 
-    for(let i=1;i<=4;i++){
-      document.getElementById("assess"+i).innerText=data[assess[i-1]];
-      document.getElementById("maxA"+i).innerText=data[max[i-1]];
-      document.getElementById("actualA"+i).innerText=data[actual[i-1]];
-      document.getElementById("targetA"+i).value=data[target[i-1]];
-    }
-  });
+for(let i=1;i<=4;i++){
+document.getElementById("assess"+i).innerText=data[assess[i-1]];
+document.getElementById("maxA"+i).innerText=data[max[i-1]];
+document.getElementById("actualA"+i).innerText=data[actual[i-1]];
 }
 
-// SAVE TARGET (GET)
-function saveTarget(){
-  fetch(url+"?action=saveTarget"
-    +"&id="+studentID.value
-    +"&t1="+targetA1.value
-    +"&t2="+targetA2.value
-    +"&t3="+targetA3.value
-    +"&t4="+targetA4.value
-  );
+calc();
+loadTable();
+});
 }
 
-// SAVE INTERVENTION (GET)
+// CALCULATION
+function calc(){
+let total=0;
+
+for(let i=1;i<=4;i++){
+let a=parseFloat(document.getElementById("actualA"+i).innerText)||0;
+let m=parseFloat(document.getElementById("maxA"+i).innerText)||0;
+
+let pct=(a/m)*100;
+document.getElementById("pct"+i).innerText=pct.toFixed(1);
+
+total+=pct;
+}
+
+total/=4;
+document.getElementById("total").innerText=total.toFixed(1);
+
+let g= total>=80?"A": total>=60?"B":"F";
+grade.innerText=g;
+
+risk.innerText= total>=70?"SAFE": total>=50?"MODERATE":"HIGH";
+
+bar.style.width=total+"%";
+bar.innerText=total.toFixed(1)+"%";
+}
+
+// SAVE INTERVENTION
 function saveIntervention(){
-  fetch(url+"?action=saveIntervention"
-    +"&id="+studentID.value
-    +"&assessment="+assessment.value
-    +"&reason="+encodeURIComponent(reason.value)
-  ).then(loadTable);
+if(!studentID.value){alert("Load student first");return;}
+
+fetch(url+"?action=saveIntervention"
++"&id="+studentID.value
++"&assessment="+assessment.value
++"&reason="+encodeURIComponent(reason.value)
+).then(loadTable);
 }
 
-// LOAD TABLE
+// LOAD TABLE FILTER BY ID
 function loadTable(){
-  fetch(url+"?action=getIntervention")
-  .then(res=>res.json())
-  .then(data=>{
-    let html=`<tr>
-    <th>Date</th><th>ID</th><th>Assess</th>
-    <th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th></tr>`;
+fetch(url+"?action=getIntervention")
+.then(res=>res.json())
+.then(data=>{
+let html=`<tr>
+<th>Date</th><th>Assessment</th><th>Reason</th>
+<th>Lecturer</th><th>Advisor</th><th>Action</th></tr>`;
 
-    for(let i=1;i<data.length;i++){
-      let row=i+1;
+for(let i=1;i<data.length;i++){
+if(data[i][1]!=studentID.value) continue;
 
-      html+=`<tr>
-      <td>${new Date(data[i][0]).toLocaleString()}</td>
-      <td>${data[i][1]}</td>
-      <td>${data[i][2]}</td>
-      <td>${data[i][3]}</td>
-      <td contenteditable onblur="update(${row},this.innerText,'lecturer')">${data[i][4]}</td>
-      <td contenteditable onblur="update(${row},this.innerText,'advisor')">${data[i][5]}</td>
-      <td><button onclick="del(${row})">X</button></td>
-      </tr>`;
-    }
+let row=i+1;
 
-    table.innerHTML=html;
-  });
+html+=`<tr>
+<td>${new Date(data[i][0]).toLocaleString()}</td>
+<td>${data[i][2]}</td>
+<td>${data[i][3]}</td>
+
+<td>
+<textarea onblur="update(${row},this.value,'lecturer')">${data[i][4]}</textarea>
+</td>
+
+<td>
+<textarea onblur="update(${row},this.value,'advisor')">${data[i][5]}</textarea>
+</td>
+
+<td><button onclick="del(${row})">X</button></td>
+</tr>`;
+}
+
+table.innerHTML=html;
+});
 }
 
 // UPDATE
 function update(row,val,type){
-  fetch(url+"?action=update"
-    +"&row="+row
-    +"&type="+type
-    +"&value="+encodeURIComponent(val)
-  );
+fetch(url+"?action=update&row="+row+"&type="+type+"&value="+encodeURIComponent(val));
 }
 
 // DELETE
 function del(row){
-  fetch(url+"?action=delete&row="+row)
-  .then(loadTable);
+fetch(url+"?action=delete&row="+row).then(loadTable);
 }
 
-window.onload=loadTable;
+window.onload=function(){
+loadAssessments();
+loadTable();
+}
 
 </script>
 
