@@ -86,7 +86,7 @@ th{background:#f3f4f7;}
 </div>
 
 <script>
-var url="https://script.google.com/macros/s/AKfycbw75VMpICTx_YRgN2jVluqAwRGLl5YKkHzf4cuOn4zF5jXlZ7weJRbqA8uzNmwdAE2tlQ/exec"; // ganti dengan link deploy Google Apps Script
+var url="https://script.google.com/macros/s/AKfycbzLNictbT8brkX4UomNgR3n0xxphU71fbobfTb1cKfEKhgiO4tmGT2qwAaXsyXvYyndGg/exec";
 
 function showTab(tab){
   document.getElementById("plannerTab").style.display = (tab=="planner")?"block":"none";
@@ -95,9 +95,9 @@ function showTab(tab){
   document.querySelector('.nav button[onclick*="'+tab+'"]').classList.add('active');
 }
 
-// --- Planner functions ---
-function getGrade(p){ if(p>=90)return "A+"; if(p>=80)return "A"; if(p>=75)return "A-"; if(p>=70)return "B+"; if(p>=65)return "B"; if(p>=60)return "B-"; if(p>=55)return "C+"; if(p>=50)return "C"; if(p>=45)return "C-"; return "F"; }
-function detectRisk(p){ if(p>=70)document.getElementById("riskLevel").innerText="SAFE"; else if(p>=50)document.getElementById("riskLevel").innerText="MODERATE RISK"; else document.getElementById("riskLevel").innerText="HIGH RISK"; }
+// Planner & Interventions JS functions
+function getGrade(p){if(p>=90)return "A+";if(p>=80)return "A";if(p>=75)return "A-";if(p>=70)return "B+";if(p>=65)return "B";if(p>=60)return "B-";if(p>=55)return "C+";if(p>=50)return "C";if(p>=45)return "C-";return "F";}
+function detectRisk(p){document.getElementById("riskLevel").innerText=(p>=70)?"SAFE":(p>=50)?"MODERATE RISK":"HIGH RISK";}
 
 function calcTarget(){
   let totalTarget=0,totalTargetMax=0;
@@ -107,11 +107,10 @@ function calcTarget(){
     let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;
     let pct=(target/max)*weight;
     document.getElementById("targetPctA"+i).innerText=pct.toFixed(2);
-    totalTarget+=target; if(target>0)totalTargetMax+=max;
+    totalTarget+=target; if(target>0) totalTargetMax+=max;
   }
   document.getElementById("totalTarget").innerText=totalTarget.toFixed(2);
-  let targetFinal=(totalTargetMax>0)?(totalTarget/totalTargetMax*100):0;
-  document.getElementById("targetFinalPct").innerText=targetFinal.toFixed(2);
+  document.getElementById("targetFinalPct").innerText=(totalTargetMax>0?(totalTarget/totalTargetMax*100):0).toFixed(2);
   calcActual();
 }
 
@@ -124,7 +123,8 @@ function calcActual(){
     let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;
     let pct=(actual/max)*weight;
     document.getElementById("actualPctA"+i).innerText=pct.toFixed(2);
-    totalActual+=actual; if(actual>0)totalActualMax+=max;
+    if(actual>=target) document.getElementById("actualA"+i).parentNode.className="correct"; else document.getElementById("actualA"+i).parentNode.className="wrong";
+    totalActual+=actual; if(actual>0) totalActualMax+=max;
   }
   document.getElementById("totalActual").innerText=totalActual;
   let finalPercent=(totalActualMax>0)?(totalActual/totalActualMax*100):0;
@@ -132,28 +132,23 @@ function calcActual(){
   document.getElementById("finalGrade").innerText=getGrade(finalPercent);
   detectRisk(finalPercent);
 
-  // PBPA Status
-  let allMax=0; for(let i=1;i<=3;i++) allMax+=parseFloat(document.getElementById("maxA"+i).innerText)||0;
+  let allMax=0; for(let i=1;i<=4;i++) allMax+=parseFloat(document.getElementById("maxA"+i).innerText)||0;
   let passMark=0.45*allMax;
   let pbpa=document.getElementById("pbpaStatus");
-  if(document.getElementById("totalActual").innerText>=passMark){ pbpa.innerText="PASS PBPA"; pbpa.className="status pass"; }
-  else{ pbpa.innerText="FAIL PBPA"; pbpa.className="status fail"; }
-  let failProb=Math.max(0,(passMark-document.getElementById("totalActual").innerText)/passMark*100);
+  if(totalActual>=passMark){ pbpa.innerText="PASS PBPA"; pbpa.className="status pass";}
+  else{pbpa.innerText="FAIL PBPA"; pbpa.className="status fail";}
+  let failProb=Math.max(0,(passMark-totalActual)/passMark*100);
   let bar=document.getElementById("failProb");
-  bar.innerText=failProb.toFixed(2)+"%";
-  bar.style.width=Math.min(failProb,100)+"%";
-  bar.style.background=(failProb>50)?"#f44336":((failProb>20)?'#ff9800':'#4caf50');
+  bar.innerText=failProb.toFixed(2)+"%"; bar.style.width=Math.min(failProb,100)+"%"; bar.style.background=(failProb>50)?"#f44336":((failProb>20)?'#ff9800':'#4caf50');
 }
 
 function loadStudent(){
-  let id=document.getElementById("studentID").value;
-  if(!id) return alert("Enter Student ID");
-  fetch(url+"?id="+id)
+  let id=document.getElementById("studentID").value; if(!id)return alert("Enter Student ID");
+  fetch(url+"?id="+id+"&method=OPTIONS").then(()=>fetch(url+"?id="+id))
   .then(res=>res.json())
   .then(data=>{
-    if(data.length==0) return alert("ID not found");
-    document.getElementById("name").innerText=data[2];
-    document.getElementById("class").innerText=data[0];
+    if(data.length==0)return alert("ID not found");
+    document.getElementById("name").innerText=data[2]; document.getElementById("class").innerText=data[0];
     let assess=[3,8,13,18], max=[5,10,15,20], weight=[6,11,16,21], actual=[7,12,17,22], target=[4,9,14,19];
     for(let i=1;i<=4;i++){
       document.getElementById("assess"+i).innerText=data[assess[i-1]];
@@ -162,10 +157,8 @@ function loadStudent(){
       document.getElementById("actualA"+i).innerText=data[actual[i-1]];
       document.getElementById("targetA"+i).value=data[target[i-1]];
     }
-    calcTarget();
-    loadAssessmentsDropdown(id);
-    loadInterventionHistory(id);
-  }).catch(err=>alert("Failed to fetch student data. Check Web App deployment and CORS."));
+    calcTarget(); loadAssessmentsDropdown(id); loadInterventionHistory(id);
+  });
 }
 
 function saveTarget(){
@@ -176,14 +169,10 @@ function saveTarget(){
   .then(res=>res.json()).then(r=>alert(r.message));
 }
 
-// --- Intervention ---
 function loadAssessmentsDropdown(id){
   fetch(url+"?action=getAssessments&id="+id)
   .then(res=>res.json())
-  .then(data=>{
-    let sel=document.getElementById("assessment"); sel.innerHTML="";
-    data.forEach(a=>{ let opt=document.createElement("option"); opt.value=a; opt.innerText=a; sel.appendChild(opt); });
-  });
+  .then(data=>{let sel=document.getElementById("assessment"); sel.innerHTML=""; data.forEach(a=>{ let opt=document.createElement("option"); opt.value=a; opt.innerText=a; sel.appendChild(opt); });});
 }
 
 function saveIntervention(){
@@ -197,8 +186,7 @@ function loadInterventionHistory(id){
   fetch(url+"?action=getIntervention")
   .then(res=>res.json())
   .then(data=>{
-    let tbl=document.getElementById("table"); 
-    tbl.innerHTML='<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Actions</th></tr>';
+    let tbl=document.getElementById("table"); tbl.innerHTML='<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Actions</th></tr>';
     data.forEach((row,i)=>{
       if(row[1]!=id) return;
       let tr=document.createElement("tr");
@@ -212,16 +200,16 @@ function loadInterventionHistory(id){
 }
 
 function updateResponse(row,type,value){
-  let payload={action:"update",row:row,type:type,value:value};
-  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({action:"update",row:row,type:type,value:value})}).then(res=>res.json()).then(r=>console.log(r.message));
 }
 
 function deleteIntervention(row){
-  if(!confirm("Delete this record?")) return;
-  let payload={action:"delete",row:row};
-  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
-  .then(res=>res.json()).then(r=>alert(r.message));
+  if(!confirm("Delete this intervention?")) return;
+  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({action:"delete",row:row})}).then(res=>res.json()).then(r=>{alert(r.message); loadStudent();});
 }
 </script>
+
 </body>
 </html>
