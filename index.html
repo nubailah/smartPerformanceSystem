@@ -86,7 +86,7 @@ th{background:#f3f4f7;}
 </div>
 
 <script>
-var url="https://script.google.com/macros/s/AKfycbw7YBJKir1G3b4Bxux-ZQpMifRimXxnCQrDli1dNax4Qu1-BOHOgVmQ0Wiezq7lrjfngA/exec";
+var url="https://script.google.com/macros/s/AKfycbw1EJRDre76wxDZ58jGYnGBT9aHaNog-1JWuhQSMS0CnL69bk1n3HcnA1alLa7IVq8I/exec"; // ganti dengan link deploy Google Apps Script
 
 function showTab(tab){
   document.getElementById("plannerTab").style.display = (tab=="planner")?"block":"none";
@@ -95,7 +95,7 @@ function showTab(tab){
   document.querySelector('.nav button[onclick*="'+tab+'"]').classList.add('active');
 }
 
-// --- Planner JS (same as previous full version) ---
+// --- Planner functions ---
 function getGrade(p){ if(p>=90)return "A+"; if(p>=80)return "A"; if(p>=75)return "A-"; if(p>=70)return "B+"; if(p>=65)return "B"; if(p>=60)return "B-"; if(p>=55)return "C+"; if(p>=50)return "C"; if(p>=45)return "C-"; return "F"; }
 function detectRisk(p){ if(p>=70)document.getElementById("riskLevel").innerText="SAFE"; else if(p>=50)document.getElementById("riskLevel").innerText="MODERATE RISK"; else document.getElementById("riskLevel").innerText="HIGH RISK"; }
 
@@ -124,8 +124,6 @@ function calcActual(){
     let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;
     let pct=(actual/max)*weight;
     document.getElementById("actualPctA"+i).innerText=pct.toFixed(2);
-    if(actual>=target) document.getElementById("actualA"+i).parentNode.className="correct";
-    else document.getElementById("actualA"+i).parentNode.className="wrong";
     totalActual+=actual; if(actual>0)totalActualMax+=max;
   }
   document.getElementById("totalActual").innerText=totalActual;
@@ -138,9 +136,9 @@ function calcActual(){
   let allMax=0; for(let i=1;i<=3;i++) allMax+=parseFloat(document.getElementById("maxA"+i).innerText)||0;
   let passMark=0.45*allMax;
   let pbpa=document.getElementById("pbpaStatus");
-  if(totalActual>=passMark){ pbpa.innerText="PASS PBPA"; pbpa.className="status pass"; }
+  if(document.getElementById("totalActual").innerText>=passMark){ pbpa.innerText="PASS PBPA"; pbpa.className="status pass"; }
   else{ pbpa.innerText="FAIL PBPA"; pbpa.className="status fail"; }
-  let failProb=Math.max(0,(passMark-totalActual)/passMark*100);
+  let failProb=Math.max(0,(passMark-document.getElementById("totalActual").innerText)/passMark*100);
   let bar=document.getElementById("failProb");
   bar.innerText=failProb.toFixed(2)+"%";
   bar.style.width=Math.min(failProb,100)+"%";
@@ -167,7 +165,7 @@ function loadStudent(){
     calcTarget();
     loadAssessmentsDropdown(id);
     loadInterventionHistory(id);
-  });
+  }).catch(err=>alert("Failed to fetch student data. Check Web App deployment and CORS."));
 }
 
 function saveTarget(){
@@ -178,7 +176,7 @@ function saveTarget(){
   .then(res=>res.json()).then(r=>alert(r.message));
 }
 
-// --- Intervention functions ---
+// --- Intervention ---
 function loadAssessmentsDropdown(id){
   fetch(url+"?action=getAssessments&id="+id)
   .then(res=>res.json())
@@ -199,28 +197,30 @@ function loadInterventionHistory(id){
   fetch(url+"?action=getIntervention")
   .then(res=>res.json())
   .then(data=>{
-    let tbl=document.getElementById("table"); tbl.innerHTML='<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Actions</th></tr>';
+    let tbl=document.getElementById("table"); 
+    tbl.innerHTML='<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Actions</th></tr>';
     data.forEach((row,i)=>{
-      if(row[1]!=id) return; // only current student
+      if(row[1]!=id) return;
       let tr=document.createElement("tr");
       tr.innerHTML='<td>'+new Date(row[0]).toLocaleDateString()+'</td><td>'+row[2]+'</td><td>'+row[3]+'</td>'+
-      '<td><textarea class="response" onchange="updateResponse('+ (i+1) +',\'lecturer\',this.value)">'+row[4]+'</textarea></td>'+
-      '<td><textarea class="response" onchange="updateResponse('+ (i+1) +',\'advisor\',this.value)">'+row[5]+'</textarea></td>'+
-      '<td><button onclick="del('+ (i+1) +')">Delete</button></td>';
+      '<td><textarea class="response" onchange="updateResponse('+(i+1)+',\'lecturer\',this.value)">'+row[4]+'</textarea></td>'+
+      '<td><textarea class="response" onchange="updateResponse('+(i+1)+',\'advisor\',this.value)">'+row[5]+'</textarea></td>'+
+      '<td><button onclick="deleteIntervention('+(i+1)+')">Delete</button></td>';
       tbl.appendChild(tr);
     });
   });
 }
 
 function updateResponse(row,type,value){
-  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({action:"update",row:row,type:type,value:value})});
+  let payload={action:"update",row:row,type:type,value:value};
+  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
 }
 
-function del(row){
-  if(!confirm("Delete this intervention?")) return;
-  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"delete",row:row})})
-  .then(res=>res.json()).then(r=>{alert(r.message); loadStudent();});
+function deleteIntervention(row){
+  if(!confirm("Delete this record?")) return;
+  let payload={action:"delete",row:row};
+  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+  .then(res=>res.json()).then(r=>alert(r.message));
 }
 </script>
 </body>
