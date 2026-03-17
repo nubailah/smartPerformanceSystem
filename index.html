@@ -1,322 +1,291 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>SMARTGrade Planner</title>
+<title>SMARTGrade Pro</title>
 
 <style>
-
 body{
-font-family:Segoe UI;
-background:#eef2f7;
-margin:0;
+  font-family:'Segoe UI';
+  margin:0;
+  background:#eef2f7;
 }
 
 .header{
-background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
-color:white;
-text-align:center;
-padding:20px;
+  background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
+  color:white;
+  text-align:center;
+  padding:20px;
+}
+
+.nav{
+  display:flex;
+  justify-content:center;
+  background:white;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.nav button{
+  flex:1;
+  padding:12px;
+  border:none;
+  background:none;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.nav button.active{
+  background:#5f6bdc;
+  color:white;
 }
 
 .container{
-max-width:1000px;
-margin:auto;
-background:white;
-padding:20px;
-border-radius:10px;
-margin-top:20px;
+  padding:15px;
+  max-width:1000px;
+  margin:auto;
 }
 
-button{
-padding:10px;
-background:#4b5bdc;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
-margin:5px;
+.card{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-top:15px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.1);
+}
+
+input, select{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button.action{
+  background:#5f6bdc;
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:6px;
+  margin-top:5px;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
 }
 
 th,td{
-border:1px solid #ddd;
-padding:8px;
-text-align:center;
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
 }
 
 th{
-background:#f3f4f7;
+  background:#f3f4f7;
 }
 
-input,select{
-width:100%;
-padding:8px;
-margin-top:5px;
+@media(max-width:600px){
+  table{
+    font-size:12px;
+  }
 }
-
 </style>
-
 </head>
 
 <body>
 
 <div class="header">
-
-<h1>SMARTGrade Planner</h1>
-
+<h2>SMARTGrade Pro</h2>
 </div>
 
-<div style="text-align:center">
-
-<button onclick="showPlanner()">Planner</button>
-
-<button onclick="showIntervention()">Academic Intervention</button>
-
+<div class="nav">
+<button class="active" onclick="showTab('planner')">Planner</button>
+<button onclick="showTab('intervention')">Intervention</button>
 </div>
 
+<div class="container">
 
-<div class="container" id="planner">
+<!-- PLANNER -->
+<div id="plannerTab" class="card">
+<input id="studentID" placeholder="Student ID">
+<button class="action" onclick="loadStudent()">Load</button>
+<button class="action" onclick="saveTarget()">Save Target</button>
 
-<label>Student ID</label>
+<p>Name: <span id="name">-</span></p>
 
-<input id="studentID">
-
-<button onclick="loadStudent()">Load Student</button>
-
-<p>Name: <span id="name"></span></p>
-
-</div>
-
-
-<div class="container" id="interventionPage" style="display:none">
-
-<h2>Academic Intervention</h2>
-
-<label>Assessment</label>
-
-<select id="assessment"></select>
-
-<label>Reason</label>
-
-<input id="reason">
-
-<label>Lecturer Response</label>
-
-<input id="lecturer">
-
-<label>Advisor Response</label>
-
-<input id="advisor">
-
-<button onclick="saveIntervention()">Save</button>
-
-<h3>Intervention History</h3>
-
-<table id="interventionTable">
+<table>
+<tr><th>Assess</th><th>Max</th><th>Target</th><th>Actual</th></tr>
 
 <tr>
-<th>Date</th>
-<th>Assessment</th>
-<th>Reason</th>
-<th>Lecturer</th>
-<th>Advisor</th>
-<th>Action</th>
+<td id="assess1"></td>
+<td id="maxA1"></td>
+<td><input id="targetA1"></td>
+<td id="actualA1"></td>
 </tr>
 
+<tr>
+<td id="assess2"></td>
+<td id="maxA2"></td>
+<td><input id="targetA2"></td>
+<td id="actualA2"></td>
+</tr>
+
+<tr>
+<td id="assess3"></td>
+<td id="maxA3"></td>
+<td><input id="targetA3"></td>
+<td id="actualA3"></td>
+</tr>
+
+<tr>
+<td id="assess4"></td>
+<td id="maxA4"></td>
+<td><input id="targetA4"></td>
+<td id="actualA4"></td>
+</tr>
 </table>
+</div>
+
+<!-- INTERVENTION -->
+<div id="interventionTab" class="card" style="display:none">
+
+<select id="assessment">
+<option>A1</option>
+<option>A2</option>
+<option>A3</option>
+<option>A4</option>
+</select>
+
+<input id="reason" placeholder="Reason">
+<button class="action" onclick="saveIntervention()">Submit</button>
+
+<h3>History</h3>
+<table id="table"></table>
 
 </div>
 
-
+</div>
 
 <script>
 
-var url="https://script.google.com/macros/s/AKfycbzCFrzcrU9yYTBEESSuL6x-qPmjR-k-BvRjZhjyYRhBSFBmV9iJWf8gDLVx_ejL0cLP2A/exec";
+var url="https://script.google.com/macros/s/AKfycbyebD0EhDiGanO93vw66L_8m_vCgMy3_w26j1pJZX7FDHdVIpApzN1sckg3bs1LnSqQLQ/exec";
 
-
-
-function showPlanner(){
-
-document.getElementById("planner").style.display="block";
-
-document.getElementById("interventionPage").style.display="none";
-
+// TAB SWITCH
+function showTab(tab){
+  document.getElementById("plannerTab").style.display=(tab=="planner")?"block":"none";
+  document.getElementById("interventionTab").style.display=(tab=="intervention")?"block":"none";
 }
 
-
-
-function showIntervention(){
-
-document.getElementById("planner").style.display="none";
-
-document.getElementById("interventionPage").style.display="block";
-
-loadAssessment();
-
-loadIntervention();
-
-}
-
-
-
+// LOAD STUDENT
 function loadStudent(){
+  let id=document.getElementById("studentID").value;
 
-let id=document.getElementById("studentID").value;
+  fetch(url+"?id="+id)
+  .then(res=>res.json())
+  .then(data=>{
+    if(data.length==0){alert("No data"); return;}
 
-fetch(url+"?action=getStudent&id="+id)
+    document.getElementById("name").innerText=data[2];
 
-.then(res=>res.json())
+    let assess=[3,8,13,18];
+    let max=[5,10,15,20];
+    let actual=[7,12,17,22];
+    let target=[4,9,14,19];
 
-.then(data=>{
-
-document.getElementById("name").innerText=data[2];
-
-});
-
+    for(let i=1;i<=4;i++){
+      document.getElementById("assess"+i).innerText=data[assess[i-1]];
+      document.getElementById("maxA"+i).innerText=data[max[i-1]];
+      document.getElementById("actualA"+i).innerText=data[actual[i-1]];
+      document.getElementById("targetA"+i).value=data[target[i-1]];
+    }
+  });
 }
 
-
-
-function loadAssessment(){
-
-let id=document.getElementById("studentID").value;
-
-fetch(url+"?action=getAssessment&id="+id)
-
-.then(res=>res.json())
-
-.then(data=>{
-
-let select=document.getElementById("assessment");
-
-select.innerHTML="";
-
-data.forEach(a=>{
-
-let opt=document.createElement("option");
-
-opt.text=a;
-
-opt.value=a;
-
-select.add(opt);
-
-});
-
-});
-
+// SAVE TARGET
+function saveTarget(){
+  fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      type:"target",
+      id:document.getElementById("studentID").value,
+      targetA1:targetA1.value,
+      targetA2:targetA2.value,
+      targetA3:targetA3.value,
+      targetA4:targetA4.value
+    })
+  });
 }
 
-
-
+// SAVE INTERVENTION
 function saveIntervention(){
-
-let payload={
-
-id:document.getElementById("studentID").value,
-
-name:document.getElementById("name").innerText,
-
-assessment:document.getElementById("assessment").value,
-
-reason:document.getElementById("reason").value,
-
-lecturer:document.getElementById("lecturer").value,
-
-advisor:document.getElementById("advisor").value
-
-};
-
-fetch(url+"?action=saveIntervention",{
-
-method:"POST",
-
-body:JSON.stringify(payload)
-
-}).then(()=>{
-
-loadIntervention();
-
-});
-
+  fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      type:"intervention",
+      id:studentID.value,
+      assessment:assessment.value,
+      reason:reason.value
+    })
+  }).then(loadTable);
 }
 
+// LOAD TABLE
+function loadTable(){
+  fetch(url+"?action=getIntervention")
+  .then(res=>res.json())
+  .then(data=>{
+    let html=`<tr>
+    <th>Date</th><th>ID</th><th>Assess</th>
+    <th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th></tr>`;
 
+    for(let i=1;i<data.length;i++){
+      let row=i+1;
 
-function loadIntervention(){
+      html+=`<tr>
+      <td>${new Date(data[i][0]).toLocaleString()}</td>
+      <td>${data[i][1]}</td>
+      <td>${data[i][2]}</td>
+      <td>${data[i][3]}</td>
+      <td contenteditable onblur="update(${row},this.innerText,'lecturer')">${data[i][4]}</td>
+      <td contenteditable onblur="update(${row},this.innerText,'advisor')">${data[i][5]}</td>
+      <td><button onclick="del(${row})">X</button></td>
+      </tr>`;
+    }
 
-let id=document.getElementById("studentID").value;
-
-fetch(url+"?action=getIntervention&id="+id)
-
-.then(res=>res.json())
-
-.then(data=>{
-
-let table=document.getElementById("interventionTable");
-
-table.innerHTML=`<tr>
-<th>Date</th>
-<th>Assessment</th>
-<th>Reason</th>
-<th>Lecturer</th>
-<th>Advisor</th>
-<th>Action</th>
-</tr>`;
-
-data.forEach(r=>{
-
-table.innerHTML+=`
-
-<tr>
-
-<td>${r[0]}</td>
-<td>${r[3]}</td>
-<td>${r[4]}</td>
-<td>${r[5]}</td>
-<td>${r[6]}</td>
-
-<td>
-
-<button onclick="deleteIntervention('${r[0]}')">Delete</button>
-
-</td>
-
-</tr>
-
-`;
-
-});
-
-});
-
+    document.getElementById("table").innerHTML=html;
+  });
 }
 
-
-
-function deleteIntervention(timestamp){
-
-fetch(url+"?action=deleteIntervention",{
-
-method:"POST",
-
-body:JSON.stringify({timestamp:timestamp})
-
-}).then(()=>loadIntervention());
-
+// UPDATE
+function update(row,val,type){
+  fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      type:"updateResponse",
+      row:row,
+      lecturer:(type=="lecturer")?val:"",
+      advisor:(type=="advisor")?val:""
+    })
+  });
 }
+
+// DELETE
+function del(row){
+  fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({type:"delete",row:row})
+  }).then(loadTable);
+}
+
+window.onload=loadTable;
 
 </script>
 
 </body>
-
 </html>
