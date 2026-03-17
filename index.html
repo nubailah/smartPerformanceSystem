@@ -75,7 +75,10 @@ textarea{resize:vertical;}
 </div>
 
 <script>
-var url="https://script.google.com/macros/s/AKfycbx_7zyYCUFtX-JSTmf6olBRtG6X01vtBpIxX7fYUqrByLLXtbuugTNaZxR8ugN5Q--aWw/exec";
+var url="https://script.google.com/macros/s/AKfycbzJ-eN8ggq97u1ojp8jNV0M6b_n2qzKkPtcE6QMuRmrW3lSKumoCY-Q4yaoRHx4fO8S5Q/exec";
+
+// ===== Escape helper =====
+function escapeQuote(str){if(!str)return'';return str.toString().replace(/'/g,"\\'").replace(/"/g,'\\"');}
 
 // ===== Tab Switching =====
 document.getElementById("plannerBtn").addEventListener("click", showPlanner);
@@ -83,16 +86,8 @@ document.getElementById("interventionBtn").addEventListener("click", showInterve
 document.getElementById("loadStudentBtn").addEventListener("click", loadStudent);
 document.getElementById("saveInterventionBtn").addEventListener("click", saveIntervention);
 
-function showPlanner(){
-  document.getElementById("planner").style.display="block";
-  document.getElementById("interventionPage").style.display="none";
-}
-function showIntervention(){
-  document.getElementById("planner").style.display="none";
-  document.getElementById("interventionPage").style.display="block";
-  loadAssessment();
-  loadIntervention();
-}
+function showPlanner(){document.getElementById("planner").style.display="block";document.getElementById("interventionPage").style.display="none";}
+function showIntervention(){document.getElementById("planner").style.display="none";document.getElementById("interventionPage").style.display="block";loadAssessment();loadIntervention();}
 
 // ===== Planner Functions =====
 function getGrade(p){if(p>=90)return"A+";if(p>=80)return"A";if(p>=75)return"A-";if(p>=70)return"B+";if(p>=65)return"B";if(p>=60)return"B-";if(p>=55)return"C+";if(p>=50)return"C";if(p>=45)return"C-";return"F";}
@@ -108,20 +103,19 @@ function loadAssessment(){let id=document.getElementById("studentID").value;fetc
 
 function saveIntervention(){let payload={action:"saveIntervention",id:document.getElementById("studentID").value,name:document.getElementById("name").innerText,assessment:document.getElementById("assessment").value,reason:document.getElementById("reason").value};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);if(r.ok){document.getElementById("reason").value="";loadIntervention();}});}
 
-function loadIntervention(){let id=document.getElementById("studentID").value;fetch(url+"?action=getIntervention&id="+id).then(res=>res.json()).then(data=>{let table=document.getElementById("interventionTable");table.innerHTML='<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th></tr>';data.forEach(r=>{table.innerHTML += `<tr>
+function loadIntervention(){let id=document.getElementById("studentID").value;fetch(url+"?action=getIntervention&id="+id).then(res=>res.json()).then(data=>{let table=document.getElementById("interventionTable");table.innerHTML='<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th></tr>';data.forEach(r=>{table.innerHTML+=`<tr>
 <td>${r[0]}</td>
-<td>${r[3]}</td>
-<td>${r[4]}</td>
-<td><textarea id="lec_${r[0]}" style="width:100%;height:80px;resize:vertical;">${r[5]||''}</textarea></td>
-<td><textarea id="adv_${r[0]}" style="width:100%;height:80px;resize:vertical;">${r[6]||''}</textarea></td>
-<td><button onclick="updateIntervention('${r[0]}')">Save</button><button onclick="deleteIntervention('${r[0]}')">Delete</button></td>
+<td>${escapeQuote(r[3])}</td>
+<td>${escapeQuote(r[4])}</td>
+<td><textarea id="lec_${r[0]}" style="width:100%;height:80px;">${escapeQuote(r[5])}</textarea></td>
+<td><textarea id="adv_${r[0]}" style="width:100%;height:80px;">${escapeQuote(r[6])}</textarea></td>
+<td><button onclick="updateIntervention('${r[0]}')">Save</button> <button onclick="deleteIntervention('${r[0]}')">Delete</button></td>
 </tr>`;});});}
 
-function updateIntervention(timestamp){let payload={action:"updateIntervention",timestamp:timestamp,lecturer:document.getElementById("lec_"+timestamp).value,advisor:document.getElementById("adv_"+timestamp).value};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
+function updateIntervention(ts){let payload={action:"updateIntervention",timestamp:ts,lecturer:document.getElementById("lec_"+ts).value,advisor:document.getElementById("adv_"+ts).value};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
 
-function deleteIntervention(timestamp){if(!confirm("Confirm delete?"))return;let payload={action:"deleteIntervention",timestamp:timestamp};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
+function deleteIntervention(ts){if(!confirm("Confirm delete?"))return;let payload={action:"deleteIntervention",timestamp:ts};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
 
 </script>
-
 </body>
 </html>
