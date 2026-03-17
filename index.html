@@ -75,11 +75,16 @@ textarea{resize:vertical;}
 </div>
 
 <script>
-// Paste your deployed Google Apps Script Web App URL here
 var url="https://script.google.com/macros/s/AKfycbzJ-eN8ggq97u1ojp8jNV0M6b_n2qzKkPtcE6QMuRmrW3lSKumoCY-Q4yaoRHx4fO8S5Q/exec";
 
-// ===== Escape helper =====
-function escapeQuote(str){if(!str)return'';return str.toString().replace(/'/g,"\\'").replace(/"/g,'\\"');}
+// ===== Escape helper untuk template literal =====
+function escapeQuote(str){
+  if(!str) return '';
+  return str.toString()
+    .replace(/`/g,'\\`')
+    .replace(/\\/g,'\\\\')
+    .replace(/\$/g,'\\$');
+}
 
 // ===== Tab Switching =====
 document.getElementById("plannerBtn").addEventListener("click", showPlanner);
@@ -116,7 +121,6 @@ function loadIntervention(){let id=document.getElementById("studentID").value;fe
 function updateIntervention(ts){let payload={action:"updateIntervention",timestamp:ts,lecturer:document.getElementById("lec_"+ts).value,advisor:document.getElementById("adv_"+ts).value};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
 
 function deleteIntervention(ts){if(!confirm("Confirm delete?"))return;let payload={action:"deleteIntervention",timestamp:ts};fetch(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
-
 </script>
 </body>
 </html>
