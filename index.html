@@ -1,173 +1,285 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMART Student Planner & Intervention</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>SMARTGrade Planner</title>
+
 <style>
-body{font-family:sans-serif;background:#eef2f7;margin:0;padding:0;}
-.header{background:linear-gradient(135deg,#5f6bdc,#8b5bbf);color:#fff;padding:20px;text-align:center;}
-.container{max-width:1000px;margin:20px auto;padding:20px;background:#fff;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
-input,select,textarea,button{width:100%;padding:10px;margin:5px 0;border-radius:5px;border:1px solid #ccc;box-sizing:border-box;}
-button{background:#4b5bdc;color:white;border:none;cursor:pointer;}
-button:hover{opacity:0.9;}
-table{width:100%;border-collapse:collapse;margin-top:10px;}
-th,td{border:1px solid #ddd;padding:8px;text-align:center;}
-th{background:#f3f4f7;}
-td.editable{background:#fff7e6;cursor:text;}
-@media(max-width:600px){table,th,td,input,button{font-size:12px;padding:5px;}}
+
+body{
+font-family:Segoe UI;
+background:#eef2f7;
+margin:0;
+}
+
+.header{
+background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
+color:white;
+text-align:center;
+padding:20px;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+margin-top:20px;
+}
+
+button{
+padding:10px;
+background:#4b5bdc;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+margin:5px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#f3f4f7;
+}
+
+input,select{
+width:100%;
+padding:8px;
+margin-top:5px;
+}
+
 </style>
+
 </head>
+
 <body>
 
 <div class="header">
-<h1>SMART Student Planner</h1>
-<p>Planner & Academic Intervention</p>
+
+<h1>SMARTGrade Planner</h1>
+
 </div>
 
-<div class="container">
-<h2>Student Planner</h2>
+<div style="text-align:center">
+
+<button onclick="showPlanner()">Planner</button>
+
+<button onclick="showIntervention()">Academic Intervention</button>
+
+</div>
+
+<div class="container" id="planner">
+
 <label>Student ID</label>
-<input type="text" id="studentID" placeholder="Enter Student ID">
+
+<input id="studentID">
+
 <button onclick="loadStudent()">Load Student</button>
-<p><b>Name:</b> <span id="name">-</span></p>
-<p><b>Class:</b> <span id="class">-</span></p>
 
-<div style="overflow-x:auto;">
-<table>
-<tr>
-<th>Assessment</th><th>Target</th><th>Max</th><th>Weight</th><th>Actual</th>
-</tr>
-<tr><td id="assess1"></td><td id="targetA1"></td><td id="maxA1"></td><td id="weightA1"></td><td id="actualA1"></td></tr>
-<tr><td id="assess2"></td><td id="targetA2"></td><td id="maxA2"></td><td id="weightA2"></td><td id="actualA2"></td></tr>
-<tr><td id="assess3"></td><td id="targetA3"></td><td id="maxA3"></td><td id="weightA3"></td><td id="actualA3"></td></tr>
-<tr><td id="assess4"></td><td id="targetA4"></td><td id="maxA4"></td><td id="weightA4"></td><td id="actualA4"></td></tr>
-</table>
-</div>
+<p>Name: <span id="name"></span></p>
+
 </div>
 
-<div class="container">
+
+<div class="container" id="interventionPage" style="display:none">
+
 <h2>Academic Intervention</h2>
-<label>Assessment</label>
-<select id="assessmentSelect"></select>
-<label>Reason</label>
-<textarea id="reasonInput" placeholder="Reason for intervention"></textarea>
-<button onclick="addIntervention()">Add Intervention</button>
 
-<h3>Intervention Records</h3>
-<div style="overflow-x:auto;">
+<label>Assessment</label>
+
+<select id="assessment">
+
+<option>Assignment 1</option>
+<option>Assignment 2</option>
+<option>Assignment 3</option>
+<option>Assignment 4</option>
+
+</select>
+
+<label>Reason</label>
+
+<input id="reason">
+
+<label>Lecturer Response</label>
+
+<input id="lecturer">
+
+<label>Advisor Response</label>
+
+<input id="advisor">
+
+<button onclick="saveIntervention()">Save</button>
+
+<h3>History</h3>
+
 <table id="interventionTable">
-<tr><th>Timestamp</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Actions</th></tr>
+
+<tr>
+
+<th>Date</th>
+<th>Assessment</th>
+<th>Reason</th>
+<th>Lecturer</th>
+<th>Advisor</th>
+<th>Action</th>
+
+</tr>
+
 </table>
+
 </div>
-</div>
+
 
 <script>
-var webAppUrl="https://script.google.com/macros/s/AKfycbyVsBN3gUZs3Sk7tJiXJ_D7OIpb0y195A3A37Xxsro8URu4PTbNOiOqU9v4exNKKL6WvQ/exec";
-var studentIdGlobal="", studentNameGlobal="";
+
+var url="https://script.google.com/macros/s/AKfycbzFcOoYHql24E1v-henh3RkHZVM-QrnglhtCoZZke_BHVjU1v_zs9Io0tBtH2FepB1OFg/exec";
+
+function showPlanner(){
+
+document.getElementById("planner").style.display="block";
+document.getElementById("interventionPage").style.display="none";
+
+}
+
+function showIntervention(){
+
+document.getElementById("planner").style.display="none";
+document.getElementById("interventionPage").style.display="block";
+
+loadIntervention();
+
+}
+
+
 
 function loadStudent(){
-  var id=document.getElementById("studentID").value;
-  if(!id){alert("Enter Student ID"); return;}
-  studentIdGlobal=id;
-  fetch(webAppUrl+"?action=planner&id="+id)
-  .then(res=>res.json())
-  .then(data=>{
-    if(data.length==0){alert("Student not found"); return;}
-    studentNameGlobal=data[2];
-    document.getElementById("class").innerText=data[0];
-    document.getElementById("name").innerText=data[2];
-    var assess=[3,8,13,18];
-    var target=[4,9,14,19];
-    var max=[5,10,15,20];
-    var weight=[6,11,16,21];
-    var actual=[7,12,17,22];
-    for(var i=1;i<=4;i++){
-      document.getElementById("assess"+i).innerText=data[assess[i-1]];
-      document.getElementById("targetA"+i).innerText=data[target[i-1]];
-      document.getElementById("maxA"+i).innerText=data[max[i-1]];
-      document.getElementById("weightA"+i).innerText=data[weight[i-1]];
-      document.getElementById("actualA"+i).innerText=data[actual[i-1]];
-    }
-    loadAssessmentsDropdown();
-    loadInterventions();
-  });
+
+let id=document.getElementById("studentID").value;
+
+fetch(url+"?action=getStudent&id="+id)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+document.getElementById("name").innerText=data[2];
+
+});
+
 }
 
-function loadAssessmentsDropdown(){
-  fetch(webAppUrl+"?action=assessments&id="+studentIdGlobal)
-  .then(res=>res.json())
-  .then(data=>{
-    var select=document.getElementById("assessmentSelect");
-    select.innerHTML="";
-    data.forEach(d=>{
-      var opt=document.createElement("option");
-      opt.value=d; opt.innerText=d;
-      select.appendChild(opt);
-    });
-  });
+
+
+function saveIntervention(){
+
+let payload={
+
+id:document.getElementById("studentID").value,
+
+name:document.getElementById("name").innerText,
+
+assessment:document.getElementById("assessment").value,
+
+reason:document.getElementById("reason").value,
+
+lecturer:document.getElementById("lecturer").value,
+
+advisor:document.getElementById("advisor").value
+
+};
+
+fetch(url+"?action=saveIntervention",{
+
+method:"POST",
+
+body:JSON.stringify(payload)
+
+}).then(()=>loadIntervention());
+
 }
 
-function loadInterventions(){
-  fetch(webAppUrl+"?action=intervention&studentId="+studentIdGlobal)
-  .then(res=>res.json())
-  .then(data=>{
-    var table=document.getElementById("interventionTable");
-    table.innerHTML='<tr><th>Timestamp</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Actions</th></tr>';
-    data.forEach(d=>{
-      var row=table.insertRow();
-      row.insertCell(0).innerText=d.timestamp;
-      row.insertCell(1).innerText=d.assessment;
-      row.insertCell(2).innerText=d.reason;
-      row.insertCell(3).innerHTML=`<span class="editable" contenteditable onblur="updateResponse('${d.timestamp}',this.innerText,'lecturer')">${d.lecturer||''}</span>`;
-      row.insertCell(4).innerHTML=`<span class="editable" contenteditable onblur="updateResponse('${d.timestamp}',this.innerText,'advisor')">${d.advisor||''}</span>`;
-      var actions=row.insertCell(5);
-      actions.innerHTML=`<button onclick='editIntervention("${d.timestamp}")'>Edit</button>
-                         <button onclick='deleteIntervention("${d.timestamp}")'>Delete</button>`;
-    });
-  });
+
+
+function loadIntervention(){
+
+let id=document.getElementById("studentID").value;
+
+fetch(url+"?action=getIntervention&id="+id)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+let table=document.getElementById("interventionTable");
+
+table.innerHTML=`<tr>
+<th>Date</th>
+<th>Assessment</th>
+<th>Reason</th>
+<th>Lecturer</th>
+<th>Advisor</th>
+<th>Action</th>
+</tr>`;
+
+data.forEach(r=>{
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${r[0]}</td>
+<td>${r[3]}</td>
+<td>${r[4]}</td>
+<td>${r[5]}</td>
+<td>${r[6]}</td>
+
+<td>
+
+<button onclick="deleteIntervention('${r[0]}')">Delete</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+});
+
 }
 
-function addIntervention(){
-  var assessment=document.getElementById("assessmentSelect").value;
-  var reason=document.getElementById("reasonInput").value;
-  if(!reason){ alert("Please enter reason"); return; }
-  fetch(webAppUrl,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:"add",id:studentIdGlobal,name:studentNameGlobal,assessment:assessment,reason:reason})
-  }).then(res=>res.json()).then(()=>{loadInterventions(); document.getElementById("reasonInput").value="";});
-}
 
-function editIntervention(timestamp){
-  var newReason=prompt("Enter new reason:");
-  if(!newReason) return;
-  fetch(webAppUrl,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:"edit",timestamp:timestamp,reason:newReason})
-  }).then(res=>res.json()).then(()=>loadInterventions());
-}
 
 function deleteIntervention(timestamp){
-  if(!confirm("Delete this intervention?")) return;
-  fetch(webAppUrl,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:"delete",timestamp:timestamp})
-  }).then(res=>res.json()).then(()=>loadInterventions());
+
+fetch(url+"?action=deleteIntervention",{
+
+method:"POST",
+
+body:JSON.stringify({timestamp:timestamp})
+
+}).then(()=>loadIntervention());
+
 }
 
-function updateResponse(timestamp,value,type){
-  var payload={action:"response",timestamp:timestamp};
-  if(type=="lecturer") payload.lecturer=value;
-  if(type=="advisor") payload.advisor=value;
-  fetch(webAppUrl,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
-  }).then(res=>res.json()).then(()=>loadInterventions());
-}
 </script>
+
 </body>
+
 </html>
