@@ -6,7 +6,7 @@
 <style>
 body{font-family:'Segoe UI';background:#eef2f7;margin:0;padding:0;}
 .header{background:linear-gradient(135deg,#5f6bdc,#8b5bbf);color:white;text-align:center;padding:20px;}
-.container{max-width:1000px;margin:20px auto;background:white;padding:20px;border-radius:10px;}
+.container{max-width:1000px;margin:20px auto;background:white;padding:20px;border-radius:10px;overflow-x:auto;}
 button{padding:8px 12px;margin:4px;background:#4b5bdc;color:white;border:none;border-radius:6px;cursor:pointer;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;}
@@ -17,6 +17,9 @@ input,select{width:100%;padding:6px;margin-top:3px;}
 .status{font-weight:bold;padding:4px 8px;border-radius:6px;display:inline-block;}
 .pass{background:#4caf50;color:white;}
 .fail{background:#f44336;color:white;}
+@media(max-width:600px){
+  table,th,td,input,select,button{font-size:12px;padding:4px;}
+}
 </style>
 </head>
 <body>
@@ -33,7 +36,7 @@ input,select{width:100%;padding:6px;margin-top:3px;}
 <!-- PLANNER -->
 <div class="container" id="planner">
 <label>Student ID</label>
-<input id="studentID">
+<input id="studentID" placeholder="Enter Student ID">
 <button onclick="loadStudent()">Load Student</button>
 
 <p>Name: <span id="name">-</span></p>
@@ -68,165 +71,29 @@ input,select{width:100%;padding:6px;margin-top:3px;}
 
 <h3>Intervention History</h3>
 <table id="interventionTable">
-<tr>
-<th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th>
-</tr>
+<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th></tr>
 </table>
 </div>
 
 <script>
-var url="https://script.google.com/macros/s/AKfycbxdMK90aP9J1AyLhmPeZBtSNyV2ygZ9U2Z0WJHmj1pCTtdq9E37S9hqKs3Ss_6nci0QWg/exec";
+var url="https://script.google.com/macros/s/AKfycbyvgWhIwyTISTVUqPm7_gIXJmDu9b4AQ2hoONYjubXL1BWOJ-S00JVlWFI2LgdIeePpLw/exec"; // <-- ganti dengan web app URL
 
-// Show/Hide Tabs
 function showPlanner(){ document.getElementById("planner").style.display="block"; document.getElementById("interventionPage").style.display="none"; }
 function showIntervention(){ document.getElementById("planner").style.display="none"; document.getElementById("interventionPage").style.display="block"; loadAssessment(); loadIntervention(); }
 
-// ---------------------- Planner Functions ----------------------
-function getGrade(p){
-  if(p>=90) return "A+";
-  if(p>=80) return "A";
-  if(p>=75) return "A-";
-  if(p>=70) return "B+";
-  if(p>=65) return "B";
-  if(p>=60) return "B-";
-  if(p>=55) return "C+";
-  if(p>=50) return "C";
-  if(p>=45) return "C-";
-  return "F";
-}
-function detectRisk(p){
-  if(p>=70) document.getElementById("riskLevel").innerText="SAFE";
-  else if(p>=50) document.getElementById("riskLevel").innerText="MODERATE RISK";
-  else document.getElementById("riskLevel").innerText="HIGH RISK";
-}
-function calcTarget(){
-  let totalTarget=0,totalTargetMax=0;
-  for(let i=1;i<=4;i++){
-    let target=parseFloat(document.getElementById("targetA"+i).value)||0;
-    let max=parseFloat(document.getElementById("maxA"+i).innerText)||0;
-    let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;
-    let pct=(target/max)*weight;
-    document.getElementById("targetPctA"+i).innerText=pct.toFixed(2);
-    totalTarget+=target;
-    if(target>0) totalTargetMax+=max;
-  }
-  document.getElementById("totalTarget").innerText=totalTarget.toFixed(2);
-  let targetFinal=(totalTargetMax>0)?(totalTarget/totalTargetMax*100):0;
-  document.getElementById("targetFinalPct").innerText=targetFinal.toFixed(2);
-  calcActual();
-}
-function calcActual(){
-  let totalActual=0,totalActualMax=0;
-  for(let i=1;i<=4;i++){
-    let actual=parseFloat(document.getElementById("actualA"+i).innerText)||0;
-    let target=parseFloat(document.getElementById("targetA"+i).value)||0;
-    let max=parseFloat(document.getElementById("maxA"+i).innerText)||0;
-    let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;
-    let pct=(actual/max)*weight;
-    document.getElementById("actualPctA"+i).innerText=pct.toFixed(2);
-    if(actual >= target) document.getElementById("actualA"+i).parentNode.className="correct";
-    else document.getElementById("actualA"+i).parentNode.className="wrong";
-    totalActual+=actual;
-    if(actual>0) totalActualMax+=max;
-  }
-  document.getElementById("totalActual").innerText=totalActual;
-  let finalPercent=(totalActualMax>0)?(totalActual/totalActualMax*100):0;
-  document.getElementById("finalPercent").innerText=finalPercent.toFixed(2);
-  document.getElementById("finalGrade").innerText=getGrade(finalPercent);
-  detectRisk(finalPercent);
-  // PBPA
-  let allMax=0;
-  for(let i=1;i<=3;i++) allMax+=parseFloat(document.getElementById("maxA"+i).innerText)||0;
-  let passMark=0.45*allMax;
-  let pbpa=document.getElementById("pbpaStatus");
-  if(totalActual>=passMark){ pbpa.innerText="PASS PBPA"; pbpa.className="status pass"; }
-  else{ pbpa.innerText="FAIL PBPA"; pbpa.className="status fail"; }
-}
+// --------- Planner ---------
+function getGrade(p){if(p>=90)return"A+";if(p>=80)return"A";if(p>=75)return"A-";if(p>=70)return"B+";if(p>=65)return"B";if(p>=60)return"B-";if(p>=55)return"C+";if(p>=50)return"C";if(p>=45)return"C-";return"F";}
+function detectRisk(p){if(p>=70)document.getElementById("riskLevel").innerText="SAFE";else if(p>=50)document.getElementById("riskLevel").innerText="MODERATE RISK";else document.getElementById("riskLevel").innerText="HIGH RISK";}
+function calcTarget(){let totalTarget=0,totalTargetMax=0;for(let i=1;i<=4;i++){let target=parseFloat(document.getElementById("targetA"+i).value)||0;let max=parseFloat(document.getElementById("maxA"+i).innerText)||0;let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;let pct=(target/max)*weight;document.getElementById("targetPctA"+i).innerText=pct.toFixed(2);totalTarget+=target;if(target>0)totalTargetMax+=max;}document.getElementById("totalTarget").innerText=totalTarget.toFixed(2);let targetFinal=(totalTargetMax>0)?(totalTarget/totalTargetMax*100):0;document.getElementById("targetFinalPct").innerText=targetFinal.toFixed(2);calcActual();}
+function calcActual(){let totalActual=0,totalActualMax=0;for(let i=1;i<=4;i++){let actual=parseFloat(document.getElementById("actualA"+i).innerText)||0;let target=parseFloat(document.getElementById("targetA"+i).value)||0;let max=parseFloat(document.getElementById("maxA"+i).innerText)||0;let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;let pct=(actual/max)*weight;document.getElementById("actualPctA"+i).innerText=pct.toFixed(2);if(actual>=target)document.getElementById("actualA"+i).parentNode.className="correct";else document.getElementById("actualA"+i).parentNode.className="wrong";totalActual+=actual;if(actual>0)totalActualMax+=max;}document.getElementById("totalActual").innerText=totalActual;let finalPercent=(totalActualMax>0)?(totalActual/totalActualMax*100):0;document.getElementById("finalPercent").innerText=finalPercent.toFixed(2);document.getElementById("finalGrade").innerText=getGrade(finalPercent);detectRisk(finalPercent);let allMax=0;for(let i=1;i<=3;i++)allMax+=parseFloat(document.getElementById("maxA"+i).innerText)||0;let passMark=0.45*allMax;let pbpa=document.getElementById("pbpaStatus");if(totalActual>=passMark){pbpa.innerText="PASS PBPA";pbpa.className="status pass";}else{pbpa.innerText="FAIL PBPA";pbpa.className="status fail";}}
+function loadStudent(){let id=document.getElementById("studentID").value;fetch(url+"?action=getStudent&id="+id).then(res=>res.json()).then(data=>{if(data.length==0){alert("ID not found");return;}document.getElementById("name").innerText=data[2];let assess=[3,8,13,18];let max=[5,10,15,20];let weight=[6,11,16,21];let actual=[7,12,17,22];let target=[4,9,14,19];for(let i=1;i<=4;i++){document.getElementById("assess"+i).innerText=data[assess[i-1]];document.getElementById("maxA"+i).innerText=data[max[i-1]];document.getElementById("weightA"+i).innerText=data[weight[i-1]];document.getElementById("actualA"+i).innerText=data[actual[i-1]];document.getElementById("targetA"+i).value=data[target[i-1]]||0;}calcTarget();}
 
-// Load Student for Planner
-function loadStudent(){
-  let id=document.getElementById("studentID").value;
-  fetch(url+"?action=getStudent&id="+id)
-    .then(res=>res.json())
-    .then(data=>{
-      if(data.length==0){ alert("ID not found"); return; }
-      document.getElementById("name").innerText=data[2];
-      let assess=[3,8,13,18]; let max=[5,10,15,20]; let weight=[6,11,16,21]; let actual=[7,12,17,22]; let target=[4,9,14,19];
-      for(let i=1;i<=4;i++){
-        document.getElementById("assess"+i).innerText=data[assess[i-1]];
-        document.getElementById("maxA"+i).innerText=data[max[i-1]];
-        document.getElementById("weightA"+i).innerText=data[weight[i-1]];
-        document.getElementById("actualA"+i).innerText=data[actual[i-1]];
-        document.getElementById("targetA"+i).value=data[target[i-1]]||0;
-      }
-      calcTarget();
-    });
-}
-
-// ---------------------- Intervention Functions ----------------------
-function loadAssessment(){
-  let id=document.getElementById("studentID").value;
-  fetch(url+"?action=getAssessment&id="+id)
-  .then(res=>res.json())
-  .then(data=>{
-    let sel=document.getElementById("assessment"); sel.innerHTML="";
-    data.forEach(a=>{ let o=document.createElement("option"); o.text=a; o.value=a; sel.add(o); });
-  });
-}
-
-function saveIntervention(){
-  let payload={
-    id:document.getElementById("studentID").value,
-    name:document.getElementById("name").innerText,
-    assessment:document.getElementById("assessment").value,
-    reason:document.getElementById("reason").value
-  };
-  fetch(url+"?action=saveIntervention",{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
-  })
-  .then(res=>res.json())
-  .then(r=>{
-    if(r.ok){ document.getElementById("reason").value=""; loadIntervention(); }
-    else alert("Failed to save");
-  });
-}
-
-function loadIntervention(){
-  let id=document.getElementById("studentID").value;
-  fetch(url+"?action=getIntervention&id="+id)
-  .then(res=>res.json())
-  .then(data=>{
-    let table=document.getElementById("interventionTable");
-    table.innerHTML=`<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th></tr>`;
-    data.forEach(r=>{
-      table.innerHTML+=`<tr>
-<td>${r[0]}</td>
-<td>${r[3]}</td>
-<td>${r[4]}</td>
-<td><input id="lec_${r[0]}" value="${r[5]}"></td>
-<td><input id="adv_${r[0]}" value="${r[6]}"></td>
-<td>
-<button onclick="updateIntervention('${r[0]}')">Save</button>
-<button onclick="deleteIntervention('${r[0]}')">Delete</button>
-</td>
-</tr>`;
-    });
-  });
-}
-
-function updateIntervention(timestamp){
-  let lecturer=document.getElementById("lec_"+timestamp).value;
-  let advisor=document.getElementById("adv_"+timestamp).value;
-  fetch(url+"?action=updateIntervention",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({timestamp,timestamp,lecturer,advisor})})
-  .then(()=>loadIntervention());
-}
-
-function deleteIntervention(timestamp){
-  fetch(url+"?action=deleteIntervention",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({timestamp:timestamp})})
-  .then(()=>loadIntervention());
-}
+// --------- Intervention ---------
+function loadAssessment(){let id=document.getElementById("studentID").value;fetch(url+"?action=getAssessment&id="+id).then(res=>res.json()).then(data=>{let sel=document.getElementById("assessment");sel.innerHTML="";data.forEach(a=>{let o=document.createElement("option");o.text=a;o.value=a;sel.add(o);});});}
+function saveIntervention(){let payload={id:document.getElementById("studentID").value,name:document.getElementById("name").innerText,assessment:document.getElementById("assessment").value,reason:document.getElementById("reason").value};fetch(url+"?action=saveIntervention",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);if(r.ok){document.getElementById("reason").value="";loadIntervention();}});}
+function loadIntervention(){let id=document.getElementById("studentID").value;fetch(url+"?action=getIntervention&id="+id).then(res=>res.json()).then(data=>{let table=document.getElementById("interventionTable");table.innerHTML='<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th></tr>';data.forEach(r=>{table.innerHTML+=`<tr><td>${r[0]}</td><td>${r[3]}</td><td>${r[4]}</td><td><input id="lec_${r[0]}" value="${r[5]}"></td><td><input id="adv_${r[0]}" value="${r[6]}"></td><td><button onclick="updateIntervention('${r[0]}')">Save</button><button onclick="deleteIntervention('${r[0]}')">Delete</button></td></tr>`;});});}
+function updateIntervention(timestamp){let payload={timestamp:timestamp,lecturer:document.getElementById("lec_"+timestamp).value,advisor:document.getElementById("adv_"+timestamp).value};fetch(url+"?action=updateIntervention",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
+function deleteIntervention(timestamp){if(!confirm("Confirm delete?"))return;fetch(url+"?action=deleteIntervention",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({timestamp:timestamp})}).then(res=>res.json()).then(r=>{alert(r.message);loadIntervention();});}
 </script>
 </body>
 </html>
