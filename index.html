@@ -12,6 +12,11 @@ table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{border:1px solid #ddd;padding:8px;text-align:center;}
 th{background:#f3f4f7;}
 input,select{width:100%;padding:6px;margin-top:3px;}
+.correct{background-color:#c8e6c9;}
+.wrong{background-color:#ffcdd2;}
+.status{font-weight:bold;padding:4px 8px;border-radius:6px;display:inline-block;}
+.pass{background:#4caf50;color:white;}
+.fail{background:#f44336;color:white;}
 </style>
 </head>
 <body>
@@ -33,7 +38,6 @@ input,select{width:100%;padding:6px;margin-top:3px;}
 
 <p>Name: <span id="name">-</span></p>
 
-<!-- Planner Table (copy your original table including Target/Actual/Percent etc.) -->
 <table id="plannerTable">
 <tr>
 <th>Assessment</th><th>Max</th><th>Weight</th><th>Target</th><th>Target %</th><th>Actual</th><th>Actual %</th>
@@ -51,7 +55,6 @@ input,select{width:100%;padding:6px;margin-top:3px;}
 <div>Predicted Grade: <span id="finalGrade">-</span></div>
 <div>Risk Level: <span id="riskLevel">-</span></div>
 <div>PBPA Status: <span id="pbpaStatus" class="status">-</span></div>
-
 </div>
 
 <!-- INTERVENTION -->
@@ -61,10 +64,6 @@ input,select{width:100%;padding:6px;margin-top:3px;}
 <select id="assessment"></select>
 <label>Reason</label>
 <input id="reason">
-<label>Lecturer Response</label>
-<input id="lecturer">
-<label>Advisor Response</label>
-<input id="advisor">
 <button onclick="saveIntervention()">Save</button>
 
 <h3>Intervention History</h3>
@@ -76,13 +75,73 @@ input,select{width:100%;padding:6px;margin-top:3px;}
 </div>
 
 <script>
-var url="https://script.google.com/macros/s/AKfycbxFpQuN2_nNvrYXkJmQsNiL-BYAGDBOiQvpEfcp5szE6wjYqFl6wGJTgpkmcN2omVwSHA/exec";
+var url="https://script.google.com/macros/s/AKfycbxdMK90aP9J1AyLhmPeZBtSNyV2ygZ9U2Z0WJHmj1pCTtdq9E37S9hqKs3Ss_6nci0QWg/exec";
 
 // Show/Hide Tabs
 function showPlanner(){ document.getElementById("planner").style.display="block"; document.getElementById("interventionPage").style.display="none"; }
 function showIntervention(){ document.getElementById("planner").style.display="none"; document.getElementById("interventionPage").style.display="block"; loadAssessment(); loadIntervention(); }
 
-// Planner functions (calcTarget, calcActual etc.) -> copy your original planner code here
+// ---------------------- Planner Functions ----------------------
+function getGrade(p){
+  if(p>=90) return "A+";
+  if(p>=80) return "A";
+  if(p>=75) return "A-";
+  if(p>=70) return "B+";
+  if(p>=65) return "B";
+  if(p>=60) return "B-";
+  if(p>=55) return "C+";
+  if(p>=50) return "C";
+  if(p>=45) return "C-";
+  return "F";
+}
+function detectRisk(p){
+  if(p>=70) document.getElementById("riskLevel").innerText="SAFE";
+  else if(p>=50) document.getElementById("riskLevel").innerText="MODERATE RISK";
+  else document.getElementById("riskLevel").innerText="HIGH RISK";
+}
+function calcTarget(){
+  let totalTarget=0,totalTargetMax=0;
+  for(let i=1;i<=4;i++){
+    let target=parseFloat(document.getElementById("targetA"+i).value)||0;
+    let max=parseFloat(document.getElementById("maxA"+i).innerText)||0;
+    let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;
+    let pct=(target/max)*weight;
+    document.getElementById("targetPctA"+i).innerText=pct.toFixed(2);
+    totalTarget+=target;
+    if(target>0) totalTargetMax+=max;
+  }
+  document.getElementById("totalTarget").innerText=totalTarget.toFixed(2);
+  let targetFinal=(totalTargetMax>0)?(totalTarget/totalTargetMax*100):0;
+  document.getElementById("targetFinalPct").innerText=targetFinal.toFixed(2);
+  calcActual();
+}
+function calcActual(){
+  let totalActual=0,totalActualMax=0;
+  for(let i=1;i<=4;i++){
+    let actual=parseFloat(document.getElementById("actualA"+i).innerText)||0;
+    let target=parseFloat(document.getElementById("targetA"+i).value)||0;
+    let max=parseFloat(document.getElementById("maxA"+i).innerText)||0;
+    let weight=parseFloat(document.getElementById("weightA"+i).innerText)||0;
+    let pct=(actual/max)*weight;
+    document.getElementById("actualPctA"+i).innerText=pct.toFixed(2);
+    if(actual >= target) document.getElementById("actualA"+i).parentNode.className="correct";
+    else document.getElementById("actualA"+i).parentNode.className="wrong";
+    totalActual+=actual;
+    if(actual>0) totalActualMax+=max;
+  }
+  document.getElementById("totalActual").innerText=totalActual;
+  let finalPercent=(totalActualMax>0)?(totalActual/totalActualMax*100):0;
+  document.getElementById("finalPercent").innerText=finalPercent.toFixed(2);
+  document.getElementById("finalGrade").innerText=getGrade(finalPercent);
+  detectRisk(finalPercent);
+  // PBPA
+  let allMax=0;
+  for(let i=1;i<=3;i++) allMax+=parseFloat(document.getElementById("maxA"+i).innerText)||0;
+  let passMark=0.45*allMax;
+  let pbpa=document.getElementById("pbpaStatus");
+  if(totalActual>=passMark){ pbpa.innerText="PASS PBPA"; pbpa.className="status pass"; }
+  else{ pbpa.innerText="FAIL PBPA"; pbpa.className="status fail"; }
+}
 
 // Load Student for Planner
 function loadStudent(){
@@ -90,21 +149,28 @@ function loadStudent(){
   fetch(url+"?action=getStudent&id="+id)
     .then(res=>res.json())
     .then(data=>{
+      if(data.length==0){ alert("ID not found"); return; }
       document.getElementById("name").innerText=data[2];
-      // also populate planner table here as in your original code
+      let assess=[3,8,13,18]; let max=[5,10,15,20]; let weight=[6,11,16,21]; let actual=[7,12,17,22]; let target=[4,9,14,19];
+      for(let i=1;i<=4;i++){
+        document.getElementById("assess"+i).innerText=data[assess[i-1]];
+        document.getElementById("maxA"+i).innerText=data[max[i-1]];
+        document.getElementById("weightA"+i).innerText=data[weight[i-1]];
+        document.getElementById("actualA"+i).innerText=data[actual[i-1]];
+        document.getElementById("targetA"+i).value=data[target[i-1]]||0;
+      }
+      calcTarget();
     });
 }
 
-// Academic Intervention functions
+// ---------------------- Intervention Functions ----------------------
 function loadAssessment(){
   let id=document.getElementById("studentID").value;
   fetch(url+"?action=getAssessment&id="+id)
   .then(res=>res.json())
   .then(data=>{
-    let select=document.getElementById("assessment"); select.innerHTML="";
-    data.forEach(a=>{
-      let opt=document.createElement("option"); opt.text=a; opt.value=a; select.add(opt);
-    });
+    let sel=document.getElementById("assessment"); sel.innerHTML="";
+    data.forEach(a=>{ let o=document.createElement("option"); o.text=a; o.value=a; sel.add(o); });
   });
 }
 
@@ -113,12 +179,18 @@ function saveIntervention(){
     id:document.getElementById("studentID").value,
     name:document.getElementById("name").innerText,
     assessment:document.getElementById("assessment").value,
-    reason:document.getElementById("reason").value,
-    lecturer:document.getElementById("lecturer").value,
-    advisor:document.getElementById("advisor").value
+    reason:document.getElementById("reason").value
   };
-  fetch(url+"?action=saveIntervention",{method:"POST",body:JSON.stringify(payload)})
-  .then(()=>loadIntervention());
+  fetch(url+"?action=saveIntervention",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  })
+  .then(res=>res.json())
+  .then(r=>{
+    if(r.ok){ document.getElementById("reason").value=""; loadIntervention(); }
+    else alert("Failed to save");
+  });
 }
 
 function loadIntervention(){
@@ -127,12 +199,9 @@ function loadIntervention(){
   .then(res=>res.json())
   .then(data=>{
     let table=document.getElementById("interventionTable");
-    table.innerHTML=`<tr>
-      <th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th>
-    </tr>`;
+    table.innerHTML=`<tr><th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th></tr>`;
     data.forEach(r=>{
-      table.innerHTML+=`
-<tr>
+      table.innerHTML+=`<tr>
 <td>${r[0]}</td>
 <td>${r[3]}</td>
 <td>${r[4]}</td>
@@ -150,15 +219,14 @@ function loadIntervention(){
 function updateIntervention(timestamp){
   let lecturer=document.getElementById("lec_"+timestamp).value;
   let advisor=document.getElementById("adv_"+timestamp).value;
-  fetch(url+"?action=updateIntervention",{method:"POST",body:JSON.stringify({timestamp:timestamp,lecturer:lecturer,advisor:advisor})})
+  fetch(url+"?action=updateIntervention",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({timestamp,timestamp,lecturer,advisor})})
   .then(()=>loadIntervention());
 }
 
 function deleteIntervention(timestamp){
-  fetch(url+"?action=deleteIntervention",{method:"POST",body:JSON.stringify({timestamp:timestamp})})
+  fetch(url+"?action=deleteIntervention",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({timestamp:timestamp})})
   .then(()=>loadIntervention());
 }
 </script>
-
 </body>
 </html>
