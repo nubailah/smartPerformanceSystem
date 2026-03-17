@@ -1,322 +1,164 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>SMARTGrade Planner</title>
-
+<title>SMARTGrade Planner Pro</title>
 <style>
-
-body{
-font-family:Segoe UI;
-background:#eef2f7;
-margin:0;
-}
-
-.header{
-background:linear-gradient(135deg,#5f6bdc,#8b5bbf);
-color:white;
-text-align:center;
-padding:20px;
-}
-
-.container{
-max-width:1000px;
-margin:auto;
-background:white;
-padding:20px;
-border-radius:10px;
-margin-top:20px;
-}
-
-button{
-padding:10px;
-background:#4b5bdc;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
-margin:5px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
-}
-
-th,td{
-border:1px solid #ddd;
-padding:8px;
-text-align:center;
-}
-
-th{
-background:#f3f4f7;
-}
-
-input,select{
-width:100%;
-padding:8px;
-margin-top:5px;
-}
-
+body{font-family:'Segoe UI';background:#eef2f7;margin:0;padding:0;}
+.header{background:linear-gradient(135deg,#5f6bdc,#8b5bbf);color:white;text-align:center;padding:20px;}
+.container{max-width:1000px;margin:20px auto;background:white;padding:20px;border-radius:10px;}
+button{padding:8px 12px;margin:4px;background:#4b5bdc;color:white;border:none;border-radius:6px;cursor:pointer;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;}
+th{background:#f3f4f7;}
+input,select{width:100%;padding:6px;margin-top:3px;}
 </style>
-
 </head>
-
 <body>
 
 <div class="header">
-
-<h1>SMARTGrade Planner</h1>
-
+<h1>SMARTGrade Planner Pro</h1>
 </div>
 
 <div style="text-align:center">
-
 <button onclick="showPlanner()">Planner</button>
-
 <button onclick="showIntervention()">Academic Intervention</button>
-
 </div>
 
-
+<!-- PLANNER -->
 <div class="container" id="planner">
-
 <label>Student ID</label>
-
 <input id="studentID">
-
 <button onclick="loadStudent()">Load Student</button>
 
-<p>Name: <span id="name"></span></p>
+<p>Name: <span id="name">-</span></p>
+
+<!-- Planner Table (copy your original table including Target/Actual/Percent etc.) -->
+<table id="plannerTable">
+<tr>
+<th>Assessment</th><th>Max</th><th>Weight</th><th>Target</th><th>Target %</th><th>Actual</th><th>Actual %</th>
+</tr>
+<tr><td id="assess1"></td><td id="maxA1"></td><td id="weightA1"></td><td><input id="targetA1" oninput="calcTarget()"></td><td id="targetPctA1"></td><td id="actualA1"></td><td id="actualPctA1"></td></tr>
+<tr><td id="assess2"></td><td id="maxA2"></td><td id="weightA2"></td><td><input id="targetA2" oninput="calcTarget()"></td><td id="targetPctA2"></td><td id="actualA2"></td><td id="actualPctA2"></td></tr>
+<tr><td id="assess3"></td><td id="maxA3"></td><td id="weightA3"></td><td><input id="targetA3" oninput="calcTarget()"></td><td id="targetPctA3"></td><td id="actualA3"></td><td id="actualPctA3"></td></tr>
+<tr><td id="assess4"></td><td id="maxA4"></td><td id="weightA4"></td><td><input id="targetA4" oninput="calcTarget()"></td><td id="targetPctA4"></td><td id="actualA4"></td><td id="actualPctA4"></td></tr>
+</table>
+
+<div>Total Target: <span id="totalTarget">0</span></div>
+<div>Target Final %: <span id="targetFinalPct">0</span>%</div>
+<div>Total Actual: <span id="totalActual">0</span></div>
+<div>Final %: <span id="finalPercent">0</span>%</div>
+<div>Predicted Grade: <span id="finalGrade">-</span></div>
+<div>Risk Level: <span id="riskLevel">-</span></div>
+<div>PBPA Status: <span id="pbpaStatus" class="status">-</span></div>
 
 </div>
 
-
+<!-- INTERVENTION -->
 <div class="container" id="interventionPage" style="display:none">
-
 <h2>Academic Intervention</h2>
-
 <label>Assessment</label>
-
 <select id="assessment"></select>
-
 <label>Reason</label>
-
 <input id="reason">
-
 <label>Lecturer Response</label>
-
 <input id="lecturer">
-
 <label>Advisor Response</label>
-
 <input id="advisor">
-
 <button onclick="saveIntervention()">Save</button>
 
 <h3>Intervention History</h3>
-
 <table id="interventionTable">
-
 <tr>
-<th>Date</th>
-<th>Assessment</th>
-<th>Reason</th>
-<th>Lecturer</th>
-<th>Advisor</th>
-<th>Action</th>
+<th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th>
 </tr>
-
 </table>
-
 </div>
 
-
-
 <script>
+var url="https://script.google.com/macros/s/AKfycbxFpQuN2_nNvrYXkJmQsNiL-BYAGDBOiQvpEfcp5szE6wjYqFl6wGJTgpkmcN2omVwSHA/exec";
 
-var url="https://script.google.com/macros/s/AKfycbyyFR8VK349ADBSmU8OZw0Nfex0RgROxnH_8dMOasjN2NUmE90-Sxwpv_Wis-AQJbVOuA/exec";
+// Show/Hide Tabs
+function showPlanner(){ document.getElementById("planner").style.display="block"; document.getElementById("interventionPage").style.display="none"; }
+function showIntervention(){ document.getElementById("planner").style.display="none"; document.getElementById("interventionPage").style.display="block"; loadAssessment(); loadIntervention(); }
 
+// Planner functions (calcTarget, calcActual etc.) -> copy your original planner code here
 
-
-function showPlanner(){
-
-document.getElementById("planner").style.display="block";
-
-document.getElementById("interventionPage").style.display="none";
-
-}
-
-
-
-function showIntervention(){
-
-document.getElementById("planner").style.display="none";
-
-document.getElementById("interventionPage").style.display="block";
-
-loadAssessment();
-
-loadIntervention();
-
-}
-
-
-
+// Load Student for Planner
 function loadStudent(){
-
-let id=document.getElementById("studentID").value;
-
-fetch(url+"?action=getStudent&id="+id)
-
-.then(res=>res.json())
-
-.then(data=>{
-
-document.getElementById("name").innerText=data[2];
-
-});
-
+  let id=document.getElementById("studentID").value;
+  fetch(url+"?action=getStudent&id="+id)
+    .then(res=>res.json())
+    .then(data=>{
+      document.getElementById("name").innerText=data[2];
+      // also populate planner table here as in your original code
+    });
 }
 
-
-
+// Academic Intervention functions
 function loadAssessment(){
-
-let id=document.getElementById("studentID").value;
-
-fetch(url+"?action=getAssessment&id="+id)
-
-.then(res=>res.json())
-
-.then(data=>{
-
-let select=document.getElementById("assessment");
-
-select.innerHTML="";
-
-data.forEach(a=>{
-
-let opt=document.createElement("option");
-
-opt.text=a;
-
-opt.value=a;
-
-select.add(opt);
-
-});
-
-});
-
+  let id=document.getElementById("studentID").value;
+  fetch(url+"?action=getAssessment&id="+id)
+  .then(res=>res.json())
+  .then(data=>{
+    let select=document.getElementById("assessment"); select.innerHTML="";
+    data.forEach(a=>{
+      let opt=document.createElement("option"); opt.text=a; opt.value=a; select.add(opt);
+    });
+  });
 }
-
-
 
 function saveIntervention(){
-
-let payload={
-
-id:document.getElementById("studentID").value,
-
-name:document.getElementById("name").innerText,
-
-assessment:document.getElementById("assessment").value,
-
-reason:document.getElementById("reason").value,
-
-lecturer:document.getElementById("lecturer").value,
-
-advisor:document.getElementById("advisor").value
-
-};
-
-fetch(url+"?action=saveIntervention",{
-
-method:"POST",
-
-body:JSON.stringify(payload)
-
-}).then(()=>{
-
-loadIntervention();
-
-});
-
+  let payload={
+    id:document.getElementById("studentID").value,
+    name:document.getElementById("name").innerText,
+    assessment:document.getElementById("assessment").value,
+    reason:document.getElementById("reason").value,
+    lecturer:document.getElementById("lecturer").value,
+    advisor:document.getElementById("advisor").value
+  };
+  fetch(url+"?action=saveIntervention",{method:"POST",body:JSON.stringify(payload)})
+  .then(()=>loadIntervention());
 }
 
-
-
 function loadIntervention(){
-
-let id=document.getElementById("studentID").value;
-
-fetch(url+"?action=getIntervention&id="+id)
-
-.then(res=>res.json())
-
-.then(data=>{
-
-let table=document.getElementById("interventionTable");
-
-table.innerHTML=`<tr>
-<th>Date</th>
-<th>Assessment</th>
-<th>Reason</th>
-<th>Lecturer</th>
-<th>Advisor</th>
-<th>Action</th>
-</tr>`;
-
-data.forEach(r=>{
-
-table.innerHTML+=`
-
+  let id=document.getElementById("studentID").value;
+  fetch(url+"?action=getIntervention&id="+id)
+  .then(res=>res.json())
+  .then(data=>{
+    let table=document.getElementById("interventionTable");
+    table.innerHTML=`<tr>
+      <th>Date</th><th>Assessment</th><th>Reason</th><th>Lecturer</th><th>Advisor</th><th>Action</th>
+    </tr>`;
+    data.forEach(r=>{
+      table.innerHTML+=`
 <tr>
-
 <td>${r[0]}</td>
 <td>${r[3]}</td>
 <td>${r[4]}</td>
-<td>${r[5]}</td>
-<td>${r[6]}</td>
-
+<td><input id="lec_${r[0]}" value="${r[5]}"></td>
+<td><input id="adv_${r[0]}" value="${r[6]}"></td>
 <td>
-
+<button onclick="updateIntervention('${r[0]}')">Save</button>
 <button onclick="deleteIntervention('${r[0]}')">Delete</button>
-
 </td>
-
-</tr>
-
-`;
-
-});
-
-});
-
+</tr>`;
+    });
+  });
 }
 
-
+function updateIntervention(timestamp){
+  let lecturer=document.getElementById("lec_"+timestamp).value;
+  let advisor=document.getElementById("adv_"+timestamp).value;
+  fetch(url+"?action=updateIntervention",{method:"POST",body:JSON.stringify({timestamp:timestamp,lecturer:lecturer,advisor:advisor})})
+  .then(()=>loadIntervention());
+}
 
 function deleteIntervention(timestamp){
-
-fetch(url+"?action=deleteIntervention",{
-
-method:"POST",
-
-body:JSON.stringify({timestamp:timestamp})
-
-}).then(()=>loadIntervention());
-
+  fetch(url+"?action=deleteIntervention",{method:"POST",body:JSON.stringify({timestamp:timestamp})})
+  .then(()=>loadIntervention());
 }
-
 </script>
 
 </body>
-
 </html>
